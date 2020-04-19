@@ -2,8 +2,8 @@
   "name": "bank-statement-processor",
   "productName": "bank-statement-processor",
   "version": "1.0.0",
-  "description": "My Electron application description",
-  "main": "src/index.js",
+  "description": "Financial Electron Application",
+  "main": "index.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -45,7 +45,10 @@
     }
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-settings": "^3.2.0",
+    "glob": "^7.1.6",
+    "highlight.js": "^10.0.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "6.0.0-beta.50",

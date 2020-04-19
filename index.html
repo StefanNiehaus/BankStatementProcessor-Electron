@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Finance Electron Application</title>
+
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/nativize.css">
+  <link rel="stylesheet" href="assets/css/global.css">
+  <link rel="stylesheet" href="assets/css/about.css">
+  <link rel="stylesheet" href="assets/css/navigation.css">
+  <link rel="stylesheet" href="assets/css/section.css">
+  <link rel="stylesheet" href="assets/css/section-view.css">
+
+  <link rel="import" href="sections/about.html">
+  <link rel="import" href="sections/menus/loader.html">
+</head>
+<body>
+
+  <nav class="nav js-nav">
+    <header class="nav-header">
+      <h1 class="nav-title">Electron <strong>Finance</strong></h1>
+      <svg class="nav-header-icon"><use xlink:href="assets/img/icons.svg#icon-electron"></use></svg>
+    </header>
+
+        <div class="nav-item u-category-menu">
+          <h5 class="nav-category">
+            <svg class="nav-icon"><use xlink:href="assets/img/icons.svg#icon-menu"></use></svg>Menus
+          </h5>
+          <button type="button" id="button-loader" data-section="loader" class="nav-button">Load <em>Bank Statement</em></button>
+          <button type="button" id="button-shortcuts" data-section="shortcuts" class="nav-button">Process <em>Bank Statements</em></button>
+        </div>
+
+        <footer class="nav-footer">
+          <button type="button" id="button-about" data-modal="about" class="nav-footer-button">About</button>
+        </footer>
+  </nav>
+
+  <main class="content js-content"></main>
+
+  <script>
+    require('./assets/scripts/imports');
+    require('./assets/scripts/navigation');
+    require('./assets/scripts/btns');
+  </script>
+</body>
+</html>
