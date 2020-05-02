@@ -13,7 +13,8 @@
   <link rel="stylesheet" href="assets/css/section-view.css">
 
   <link rel="import" href="sections/about.html">
-  <link rel="import" href="sections/menus/loader.html">
+  <link rel="import" href="sections/open-file.html">
+  <link rel="import" href="sections/processor.html">
 </head>
 <body>
 
@@ -28,7 +29,7 @@
             <svg class="nav-icon"><use xlink:href="assets/img/icons.svg#icon-menu"></use></svg>Menus
           </h5>
           <button type="button" id="button-loader" data-section="loader" class="nav-button">Load <em>Bank Statement</em></button>
-          <button type="button" id="button-shortcuts" data-section="shortcuts" class="nav-button">Process <em>Bank Statements</em></button>
+          <button type="button" id="button-processor" data-section="processor" class="nav-button">Process <em>Bank Statements</em></button>
         </div>
 
         <footer class="nav-footer">
@@ -40,8 +41,7 @@
 
   <script>
     require('./assets/scripts/imports');
-    require('./assets/scripts/navigation');
-    require('./assets/scripts/btns');
+    require('./assets/scripts/transitions');
   </script>
 </body>
 </html>

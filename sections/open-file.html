@@ -1,0 +1,94 @@
+<template class="task-template">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <section id="loader-section" class="section js-section u-category-menu">
+    <header class="section-header">
+      <div class="section-wrapper">
+        <h1>
+          <svg class="section-icon"><use xlink:href="assets/img/icons.svg#icon-native-ui"></use></svg>
+          Configuration
+        </h1>
+        <p>This section will be used to configure the input and determine the database.</p>
+      </div>
+    </header>
+
+    <div class="section-view">
+      <div class="section-view-wrapper">
+        <button id="open-file-toggle" class="js-container-target section-view-toggle-button">Open Bank Statement File
+          <div class="section-view-meta u-avoid-clicks">Supports: CSV Files</div>
+        </button>
+
+        <div class="section-view-box">
+          <div class="section-view-controls">
+            <button class="section-view-button" id="select-file">Load Statement File</button>
+          </div><br>
+
+          <div id="open-file-details">
+            File Path: <data class="section-view-response" id="selected-file" value=""></data><br>
+            <label for="column-transaction-date">column-transaction-date: </label><select id="column-transaction-date">
+            <option selected="selected">1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+          </select><br>
+            <label for="column-description">column-description: </label><select id="column-description">
+            <option>1</option>
+            <option>2</option>
+            <option selected="selected">3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+          </select><br>
+            <label for="column-debit">column-debit: </label><select id="column-debit">
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option selected="selected">4</option>
+            <option>5</option>
+            <option>6</option>
+          </select><br>
+            <label for="column-credit">column-credit: </label><select id="column-credit">
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option selected="selected">5</option>
+            <option>6</option>
+          </select><br>
+            <label for="column-balance">column-balance: </label><select id="column-balance">
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option selected="selected">6</option>
+          </select>
+          </div><br>
+
+          <div class="section-view-controls">
+            <button class="section-view-button" id="confirm-input-configuration">Confirm</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!--    <div class="section-view">-->
+    <!--      <div class="section-view-wrapper">-->
+    <!--        <button id="file-configuration-toggle" class="js-container-target section-view-toggle-button">Configure Statement Input-->
+    <!--          <div class="section-view-meta u-avoid-clicks">Purpose: Manual Override</div>-->
+    <!--        </button>-->
+    <!--        <div class="section-view-box">-->
+
+    <!--        </div>-->
+    <!--      </div>-->
+    <!--    </div>-->
+
+    <script>
+      require('./renderer-process/open-file');
+    </script>
+
+  </section>
+</template>

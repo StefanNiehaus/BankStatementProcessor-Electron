@@ -1,85 +1,98 @@
 const settings = require('electron-settings');
+const Buttons = require('./btns');
 
-document.body.addEventListener('click', (event) => {
-  if (event.target.dataset.section) {
-    handleSectionTrigger(event);
-  } else if (event.target.dataset.modal) {
-    handleModalTrigger(event);
-  } else {
-    hideAllModals();
-    showMainContent();
+class Navigation {
+
+  start() {
+    let buttons = new Buttons();
+    buttons.register();
+    // Default to the view that was active the last time the app was open
+    const sectionId = settings.get('activeSectionId');
+    if (sectionId) {
+      console.info(`Loading section: ${sectionId}`);
+      this.showMainContent();
+      this.resumeSection(sectionId);
+    } else {
+      console.info(`Loading default section`);
+      this.activateDefaultSection();
+      this.displayAbout();
+    }
   }
-});
 
-function handleSectionTrigger (event) {
-  console.log(`Opening section: ${event.target.dataset.section}`);
-  hideAllSectionsAndDeselectButtons();
+  handleClick(event) {
+    if (event.target.dataset.section) {
+      this.handleSectionTrigger(event);
+    } else if (event.target.dataset.modal) {
+      this.handleModalTrigger(event);
+    } else {
+      this.hideAllModals();
+      this.showMainContent();
+    }
+  }
 
-  // Highlight clicked button and show view
-  event.target.classList.add('is-selected');
+  handleSectionTrigger (event) {
+    console.info(`Opening section: ${event.target.dataset.section}`);
+    this.hideAllSectionsAndDeselectButtons();
 
-  // Display the current section
-  const sectionId = `${event.target.dataset.section}-section`;
-  document.getElementById(sectionId).classList.add('is-shown');
+    // Highlight clicked button and show view
+    event.target.classList.add('is-selected');
 
-  // Save currently active button in localStorage
-  const buttonId = event.target.getAttribute('id');
-  settings.set('activeSectionButtonId', buttonId);
+    // Display the current section
+    const sectionId = `${event.target.dataset.section}-section`;
+    document.getElementById(sectionId).classList.add('is-shown');
+
+    // Save currently active section in localStorage
+    settings.set('activeSectionId', sectionId);
+    console.info(`Saved section: ${event.target.dataset.section}`);
+  }
+
+  handleModalTrigger (event) {
+    console.log(`Opening modal: ${event.target.dataset.modal}`);
+    this.hideAllModals();
+    this.showMainContent();
+
+    // Show modal
+    const modalId = `${event.target.dataset.modal}-modal`;
+    document.getElementById(modalId).classList.add('is-shown')
+  }
+
+  hideAllModals () {
+    const modals = document.querySelectorAll('.modal.is-shown');
+    Array.prototype.forEach.call(modals, (modal) => {
+      modal.classList.remove('is-shown')
+    });
+  }
+
+  hideAllSectionsAndDeselectButtons () {
+    const sections = document.querySelectorAll('.js-section.is-shown');
+    Array.prototype.forEach.call(sections, (section) => {
+      section.classList.remove('is-shown');
+    });
+
+    const buttons = document.querySelectorAll('.nav-button.is-selected');
+    Array.prototype.forEach.call(buttons, (button) => {
+      button.classList.remove('is-selected');
+    })
+  }
+
+  activateDefaultSection () {
+    document.getElementById('button-loader').click()
+  }
+
+  displayAbout () {
+    document.querySelector('#about-modal').classList.add('is-shown');
+  }
+
+  showMainContent () {
+    document.querySelector('.js-nav').classList.add('is-shown');
+    document.querySelector('.js-content').classList.add('is-shown')
+  }
+
+  resumeSection(sectionId) {
+
+    const section = document.getElementById(sectionId).classList.add('is-shown');
+    if (section) section.click()
+  }
 }
 
-function handleModalTrigger (event) {
-  console.log(`Opening modal: ${event.target.dataset.modal}`);
-  hideAllModals();
-  showMainContent();
-
-  // Show modal
-  const modalId = `${event.target.dataset.modal}-modal`;
-  document.getElementById(modalId).classList.add('is-shown')
-}
-
-function hideAllModals () {
-  const modals = document.querySelectorAll('.modal.is-shown');
-  Array.prototype.forEach.call(modals, (modal) => {
-    modal.classList.remove('is-shown')
-  });
-}
-
-function hideAllSectionsAndDeselectButtons () {
-  const sections = document.querySelectorAll('.js-section.is-shown');
-  Array.prototype.forEach.call(sections, (section) => {
-    section.classList.remove('is-shown');
-  });
-
-  const buttons = document.querySelectorAll('.nav-button.is-selected');
-  Array.prototype.forEach.call(buttons, (button) => {
-    button.classList.remove('is-selected');
-  })
-}
-
-function activateDefaultSection () {
-  document.getElementById('button-loader').click()
-}
-
-function displayAbout () {
-  document.querySelector('#about-modal').classList.add('is-shown');
-}
-
-function showMainContent () {
-  document.querySelector('.js-nav').classList.add('is-shown');
-  document.querySelector('.js-content').classList.add('is-shown')
-}
-
-
-// Default to the view that was active the last time the app was open
-console.log("Loading navigation");
-const sectionId = settings.get('activeSectionButtonId');
-if (sectionId) {
-  console.log(`Loading section: ${sectionId}`);
-  showMainContent();
-  const section = document.getElementById(sectionId);
-  if (section) section.click()
-} else {
-  console.log(`Loading default section`);
-  activateDefaultSection();
-  displayAbout();
-}
+module.exports = Navigation;
