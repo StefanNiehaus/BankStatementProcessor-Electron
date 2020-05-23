@@ -1,5 +1,6 @@
 const settings = require('electron-settings');
 const Buttons = require('./btns');
+const {ACTIVE_SECTION_ID} = require("../../constants/settings");
 
 class Navigation {
 
@@ -7,7 +8,7 @@ class Navigation {
     let buttons = new Buttons();
     buttons.register();
     // Default to the view that was active the last time the app was open
-    const sectionId = settings.get('activeSectionId');
+    const sectionId = settings.get(ACTIVE_SECTION_ID);
     if (sectionId) {
       console.info(`Loading section: ${sectionId}`);
       this.showMainContent();
@@ -42,7 +43,7 @@ class Navigation {
     document.getElementById(sectionId).classList.add('is-shown');
 
     // Save currently active section in localStorage
-    settings.set('activeSectionId', sectionId);
+    settings.set(ACTIVE_SECTION_ID, sectionId);
     console.info(`Saved section: ${event.target.dataset.section}`);
   }
 

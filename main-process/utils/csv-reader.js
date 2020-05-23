@@ -1,10 +1,10 @@
 const fs = require('fs');
 const csv = require('jquery-csv');
 
-function readCSV(path) {
+function readCSV(path, dao) {
     fs.readFile(path, 'UTF-8', (err, fileContent) => {
         csv.toArrays(fileContent, {}, (err, data) => {
-            return data;
+            dao.save(data);
         });
     });
 }

@@ -74,7 +74,7 @@ class Application {
     }
 
     this.mainWindow = new BrowserWindow(windowOptions);
-    this.mainWindow.loadURL(path.join('file://', __dirname, '/index.html')).then();
+    this.mainWindow.loadURL(path.join('file://', __dirname, '/index.html')).then(/* Nothing */);
 
     this.mainWindow.on('closed', () => {
       this.mainWindow = null

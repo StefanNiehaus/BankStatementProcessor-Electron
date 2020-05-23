@@ -1,6 +1,6 @@
 const {ipcMain, dialog} = require('electron');
 const {readCSV} = require('./utils/csv-reader');
-const BankStatementDAO = require('./dao/bank-statement-dao');
+const {BankStatementsDAO} = require('./dao/bank-statement-dao');
 const {OPEN_FILE_CHANNEL, SELECTED_FILE_CHANNEL, LOAD_FILE_CHANNEL} = require('../constants/channels');
 
 class OpenFileMain {
@@ -10,6 +10,7 @@ class OpenFileMain {
   };
 
   start() {
+    this.bankStatementDAO = new BankStatementsDAO();
     this.listenOnOpenFileChannel();
     this.listenOnLoadFileChannel();
   }
@@ -23,7 +24,7 @@ class OpenFileMain {
   listenOnLoadFileChannel() {
     ipcMain.on(LOAD_FILE_CHANNEL, (event, selectedFile) => {
       console.info(`Loading bank statement for processing: ${selectedFile}`);
-      let data = readCSV(selectedFile);
+      readCSV(selectedFile, this.bankStatementDAO);
     });
   }
 

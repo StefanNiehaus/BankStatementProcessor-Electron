@@ -1,4 +1,5 @@
 const settings = require('electron-settings');
+const {ACTIVE_DEMO_BUTTON_ID} = require("../../constants/settings");
 
 class Buttons {
 
@@ -18,9 +19,9 @@ class Buttons {
       console.info('Click button');
       event.target.parentElement.classList.toggle('is-open');
       if (event.target.parentElement.classList.contains('is-open')) {
-        settings.set('activeDemoButtonId', event.target.getAttribute('id'));
+        settings.set(ACTIVE_DEMO_BUTTON_ID, event.target.getAttribute('id'));
       } else {
-        settings.delete('activeDemoButtonId');
+        settings.delete(ACTIVE_DEMO_BUTTON_ID);
       }
     })
   }
