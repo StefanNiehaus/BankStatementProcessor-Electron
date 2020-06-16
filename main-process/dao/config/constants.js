@@ -1,15 +1,19 @@
 
 // Database constants
 const DATABASE_NAME = 'bank_statements_db';
-const PLUGIN_NAME = 'pouchdb-adapter-leveldb';
+const DATABASE_PLUGIN_NAME = 'pouchdb-adapter-leveldb';
 const ADAPTOR = require('leveldown');
 
 // Collection constants
-const COLLECTION_NAME = 'bank_statement_collection';
+const COLLECTION_STATEMENTS_UNCONFIRMED = 'statements_collection';
+const COLLECTION_CATEGORIZATION = 'categories_collection';
+const COLLECTION_STATEMENTS_CONFIRMED = 'statements_collection_classified';
 
 module.exports = {
-    adaptor: ADAPTOR,
-    pluginName: PLUGIN_NAME,
-    databaseName: DATABASE_NAME,
-    collectionName: COLLECTION_NAME
+    ADAPTOR,
+    DATABASE_PLUGIN_NAME,
+    DATABASE_NAME,
+    COLLECTION_STATEMENTS_UNCONFIRMED,
+    COLLECTION_STATEMENTS_CONFIRMED,
+    COLLECTION_CATEGORIZATION
 };

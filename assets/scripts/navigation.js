@@ -4,15 +4,18 @@ const {ACTIVE_SECTION_ID} = require("../../constants/settings");
 
 class Navigation {
 
+  buttons = new Buttons();
+
   start() {
-    let buttons = new Buttons();
-    buttons.register();
+    this.buttons.register();
+    this.buttons.defaultButton();
+
     // Default to the view that was active the last time the app was open
     const sectionId = settings.get(ACTIVE_SECTION_ID);
     if (sectionId) {
       console.info(`Loading section: ${sectionId}`);
       this.showMainContent();
-      this.resumeSection(sectionId);
+      this.loadSection(sectionId);
     } else {
       console.info(`Loading default section`);
       this.activateDefaultSection();
@@ -32,19 +35,13 @@ class Navigation {
   }
 
   handleSectionTrigger (event) {
-    console.info(`Opening section: ${event.target.dataset.section}`);
-    this.hideAllSectionsAndDeselectButtons();
+    const sectionId = `${event.target.dataset.section}-section`;
+    console.info(`Opening section: ${sectionId}`);
+
+    this.loadSection(sectionId);
 
     // Highlight clicked button and show view
     event.target.classList.add('is-selected');
-
-    // Display the current section
-    const sectionId = `${event.target.dataset.section}-section`;
-    document.getElementById(sectionId).classList.add('is-shown');
-
-    // Save currently active section in localStorage
-    settings.set(ACTIVE_SECTION_ID, sectionId);
-    console.info(`Saved section: ${event.target.dataset.section}`);
   }
 
   handleModalTrigger (event) {
@@ -64,12 +61,14 @@ class Navigation {
     });
   }
 
-  hideAllSectionsAndDeselectButtons () {
+  hideAllSections() {
     const sections = document.querySelectorAll('.js-section.is-shown');
     Array.prototype.forEach.call(sections, (section) => {
       section.classList.remove('is-shown');
     });
+  }
 
+  deselectButtons() {
     const buttons = document.querySelectorAll('.nav-button.is-selected');
     Array.prototype.forEach.call(buttons, (button) => {
       button.classList.remove('is-selected');
@@ -89,10 +88,16 @@ class Navigation {
     document.querySelector('.js-content').classList.add('is-shown')
   }
 
-  resumeSection(sectionId) {
+  loadSection(sectionId) {
+    this.hideAllSections();
+    this.deselectButtons();
 
-    const section = document.getElementById(sectionId).classList.add('is-shown');
-    if (section) section.click()
+    console.info('Loading section:', sectionId);
+    document.getElementById(sectionId).classList.add('is-shown');
+
+    // Save currently active section in localStorage
+    settings.set(ACTIVE_SECTION_ID, sectionId);
+    console.info('Saved section:', sectionId);
   }
 }
 

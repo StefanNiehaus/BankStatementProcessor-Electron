@@ -21,11 +21,49 @@ const bankStatementSchema = {
         },
         categorized: {
             type: 'boolean'
+        },
+        source: {
+            type: ['string', 'null']
+        },
+        mainCategory: {
+            type: ['string', 'null']
+        },
+        subCategory: {
+            type: ['string', 'null']
+        },
+        explanation: {
+            type: ['string', 'null']
+        },
+        identifier: {
+            type: ['string', 'null']
         }
     },
     required: ['transactionDate', 'description', 'amount', 'balance']
 };
 
+const categorizationsSchema = {
+    version: 0,
+    title: 'Bank Statement Schema',
+    description: 'Describes a simple bank statement',
+    type: 'object',
+    properties: {
+        source: {
+            type: 'string'
+        },
+        mainCategory: {
+            type: 'string'
+        },
+        subCategory: {
+            type: 'string'
+        },
+        identifier: {
+            type: 'string'
+        }
+    },
+    required: ['source', 'mainCategory', 'subCategory', 'identifier']
+};
+
 module.exports = {
-    bankStatementSchema
+    bankStatementSchema,
+    categorizationsSchema
 };

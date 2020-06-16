@@ -10,13 +10,12 @@ class Buttons {
     Array.prototype.forEach.call(this.buttons, (btn) => {
       this.registerButton(btn);
     });
-    this.defaultButton()
   }
 
   registerButton(btn) {
-    console.info('Registering button');
+    console.info('Registering button:', btn);
     btn.addEventListener('click', (event) => {
-      console.info('Click button');
+      console.info('Click button:', event.target.getAttribute('id'));
       event.target.parentElement.classList.toggle('is-open');
       if (event.target.parentElement.classList.contains('is-open')) {
         settings.set(ACTIVE_DEMO_BUTTON_ID, event.target.getAttribute('id'));
@@ -28,7 +27,7 @@ class Buttons {
 
   defaultButton() {
     // Default to the demo that was active the last time the app was open
-    const buttonId = settings.get('activeDemoButtonId');
+    const buttonId = settings.get(ACTIVE_DEMO_BUTTON_ID);
     if (buttonId) {
       document.getElementById(buttonId).click();
     }

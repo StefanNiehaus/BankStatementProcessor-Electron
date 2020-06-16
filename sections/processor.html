@@ -1,5 +1,4 @@
 <template class="task-template">
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">-->
     <section id="processor-section" class="section js-section u-category-menu">
         <header class="section-header">
             <div class="section-wrapper">
@@ -18,25 +17,60 @@
                 </button>
 
                 <div class="section-view-box">
+                    <div class="section-view-controls">
+                        <button class="section-view-button" id="load-statement-entry">Load</button>
+                    </div>
 
+                    <div id="statement-details">
+                        Transaction Date: <data class="section-view-response" id="statement-transaction-date" value=""></data><br>
+                        Description: <data class="section-view-response" id="statement-description" value=""></data><br>
+                        Amount: <data class="section-view-response" id="statement-amount" value=""></data><br>
+                        Balance: <data class="section-view-response" id="statement-balance" value=""></data><br>
+                    </div>
+
+                    <div id="statement-category-details">
+                        <label> Source Statement: <input id="statement-source-input" list="statement-source-list"/></label>
+                            <datalist id="statement-source-list">
+                            </datalist><br>
+                        <label> Category: <input id="statement-category-input" list="statement-category-list"/></label>
+                            <datalist id="statement-category-list">
+                            </datalist><br>
+                        <label> Sub Category: <input id="statement-sub-category-input" list="statement-sub-category-list"/></label>
+                            <datalist id="statement-sub-category-list">
+                            </datalist><br>
+                        <label> Explanation: <input id="statement-explanation-input" list="statement-explanation-list"/></label>
+                            <datalist id="statement-explanation-list">
+                            </datalist><br>
+                        <label> Identifier: <input id="statement-identifier-input" list="statement-identifier-list"/></label>
+                            <datalist id="statement-identifier-list">
+                            </datalist><br>
+                    </div>
+
+                    <div class="section-view-controls">
+                        <button class="section-view-button" id="button-confirm-statement-entry-classification">Confirm</button>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <div class="section-view">
+            <div class="section-view-wrapper">
+                <button id="confirm-export-statements-toggle" class="js-container-target section-view-toggle-button">Confirmation and Exporting
+                    <div class="section-view-meta u-avoid-clicks">Supports: CSV exports</div>
+                </button>
 
-        <!--    <div class="section-view">-->
-        <!--      <div class="section-view-wrapper">-->
-        <!--        <button id="file-configuration-toggle" class="js-container-target section-view-toggle-button">Configure Statement Input-->
-        <!--          <div class="section-view-meta u-avoid-clicks">Purpose: Manual Override</div>-->
-        <!--        </button>-->
-        <!--        <div class="section-view-box">-->
+                <div class="section-view-box">
 
-        <!--        </div>-->
-        <!--      </div>-->
-        <!--    </div>-->
+                    <div class="section-view-controls">
+                        <button class="section-view-button" id="button-confirm-categorizations">Confirm Classifications</button>
+                        <button class="section-view-button" id="button-confirm-export">Export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <script>
-            // require('./renderer-process/open-file');
+            require('./renderer-process/processor');
         </script>
 
     </section>
