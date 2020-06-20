@@ -100,7 +100,7 @@ class BankStatementsDAO {
      * */
     async bulkInsertConfirmedCategorizedStatement(documents) {
         console.info("Documents to be confirmed:", documents);
-        return this.confirmedStatementsCollection
+        return await this.confirmedStatementsCollection
             .bulkInsert(documents)
             .then(() => console.info('Successfully performed bulk insert of confirmed bank statements'))
             .catch(err => console.info(err));
@@ -152,6 +152,8 @@ class BankStatementsDAO {
     async getConfirmedStatements() {
         let documents = await this.confirmedStatementsCollection
             .find()
+            .where('categorized')
+            .equals(true)
             .exec();
 
         console.info(`Found ${documents.length} confirmed categorized documents`);
