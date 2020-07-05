@@ -11,6 +11,15 @@ function formatStatement(originalStatement) {
     return originalStatement;
 }
 
+function constructIdentifierDocument(data, config) {
+    return {
+        source: data[config.sourceIndex],
+        mainCategory: data[config.categoryIndex],
+        subCategory: data[config.subCategoryIndex],
+        identifier: data[config.identifierIndex]
+    }
+}
+
 function constructDocument(statement) {
     return {
         transactionDate: statement[settings.get(settingKeys.COLUMN_TRANSACTION_DATE)],
@@ -39,5 +48,6 @@ function constructCategoryIdentifierDocument(statement) {
 module.exports = {
     formatStatement,
     constructDocument,
-    constructCategoryIdentifierDocument
+    constructCategoryIdentifierDocument,
+    constructIdentifierDocument
 };

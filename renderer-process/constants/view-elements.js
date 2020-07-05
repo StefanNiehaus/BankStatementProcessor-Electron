@@ -7,12 +7,22 @@ const TOGGLE_PROCESS_STATEMENTS = 'process-statements-toggle';
 const TOGGLE_OPEN_FILE = 'open-file-toggle';
 
 // Buttons
+const BUTTON_LOAD_STATEMENT_FILE = 'select-file';
 const BUTTON_LOAD_STATEMENT_ENTRY = 'load-statement-entry';
+const BUTTON_LOAD_IDENTIFIERS = 'button-load-identifier-file';
+const BUTTON_START_AUTO_CATEGORIZATION = 'button-start-automatic-categorization';
 const BUTTON_CONFIRM_ENTRY_CLASSIFICATION = 'button-confirm-statement-entry-classification';
 const BUTTON_CONFIRM_ALL_CLASSIFICATIONS = 'button-confirm-categorizations';
-const BUTTON_EXPORT = 'button-confirm-export';
+const BUTTON_EXPORT_BANK_STATEMENTS = 'button-confirm-export';
+const BUTTON_EXPORT_IDENTIFIERS = 'button-export-identifiers';
 
 // Data Elements
+const DATA_BANK_STATEMENT_FILE = 'data-bank-statement-file';
+const DATA_IDENTIFIERS_FILE = 'data-identifiers-file';
+
+const DATA_AUTO_CATEGORIZATION_SUCCESS_COUNT = 'data-auto-categorized-success-count';
+const DATA_AUTO_CATEGORIZATION_FAIL_COUNT = 'data-auto-categorized-fail-count';
+
 const DATA_STATEMENT_TRANSACTION_DATE = 'statement-transaction-date';
 const DATA_STATEMENT_DESCRIPTION = 'statement-description';
 const DATA_STATEMENT_AMOUNT = 'statement-amount';
@@ -37,10 +47,20 @@ module.exports = {
     TOGGLE_OPEN_FILE,
     TOGGLE_PROCESS_STATEMENTS,
 
+    BUTTON_LOAD_STATEMENT_FILE,
     BUTTON_LOAD_STATEMENT_ENTRY,
+    BUTTON_LOAD_IDENTIFIERS,
+    BUTTON_START_AUTO_CATEGORIZATION,
     BUTTON_CONFIRM_ENTRY_CLASSIFICATION,
     BUTTON_CONFIRM_ALL_CLASSIFICATIONS,
-    BUTTON_EXPORT,
+    BUTTON_EXPORT_BANK_STATEMENTS,
+    BUTTON_EXPORT_IDENTIFIERS,
+
+    DATA_AUTO_CATEGORIZATION_SUCCESS_COUNT,
+    DATA_AUTO_CATEGORIZATION_FAIL_COUNT,
+
+    DATA_BANK_STATEMENT_FILE,
+    DATA_IDENTIFIERS_FILE,
 
     DATA_STATEMENT_TRANSACTION_DATE,
     DATA_STATEMENT_DESCRIPTION,

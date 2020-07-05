@@ -28,11 +28,6 @@ class BankStatementsDAO {
         schema: schemas.bankStatementSchema,
         path: `${app.getPath(this.DB_DIRECTORY)}/${app.name}`
     };
-    COLLECTION_STATEMENTS_CONFIRMED_CONFIG = {
-        name: constants.COLLECTION_STATEMENTS_CONFIRMED,
-        schema: schemas.bankStatementSchema,
-        path: `${app.getPath(this.DB_DIRECTORY)}/${app.name}`
-    };
     COLLECTION_CATEGORIES_CONFIG = {
         name: constants.COLLECTION_CATEGORIZATION,
         schema: schemas.categorizationsSchema,
@@ -47,7 +42,6 @@ class BankStatementsDAO {
     async start() {
         await this.initDataBase();
         await this.initStatementsCollection();
-        await this.initStatementsConfirmedCollection();
         await this.initCategoriesCollection();
     }
 
@@ -63,26 +57,10 @@ class BankStatementsDAO {
         console.info('Initialized bank statements collection');
     }
 
-    async initStatementsConfirmedCollection() {
-        console.info('Initializing confirmed bank statements collection');
-        this.confirmedStatementsCollection = await this.db.collection(this.COLLECTION_STATEMENTS_CONFIRMED_CONFIG);
-        console.info('Initialized confirmed bank statements collection');
-    }
-
     async initCategoriesCollection() {
         console.info('Initializing categorizations collection');
         this.categoriesCollection = await this.db.collection(this.COLLECTION_CATEGORIES_CONFIG);
         console.info('Initialized categorizations collection');
-    }
-
-    /**
-     * Save statement in temporary collection with all recently loaded statements.
-     * */
-    async insertStatement(document) {
-        return this.statementsCollection
-            .insert(document)
-            .then(() => console.info('Successfully saved bank statement line'))
-            .catch(err => console.info(err));
     }
 
     /**
@@ -96,13 +74,12 @@ class BankStatementsDAO {
     }
 
     /**
-     * Bulk save statements in temporary collection with all recently loaded statements.
+     * Bulk save categories in temporary collection with all recently loaded statements.
      * */
-    async bulkInsertConfirmedCategorizedStatement(documents) {
-        console.info("Documents to be confirmed:", documents);
-        return await this.confirmedStatementsCollection
+    async bulkInsertCategorizations(documents) {
+        return this.categoriesCollection
             .bulkInsert(documents)
-            .then(() => console.info('Successfully performed bulk insert of confirmed bank statements'))
+            .then(() => console.info('Successfully performed bulk insert of categories'))
             .catch(err => console.info(err));
     }
 
@@ -132,25 +109,24 @@ class BankStatementsDAO {
     }
 
     /**
-     * Retrieve all of the statements that match the given {@param categorized} flag in the temporary collection
-     * with all recently loaded statements.
+     * Retrieve all of the statements without a categorization.
      * */
-    async getStatements(categorized) {
+    async getUncategorizedStatements() {
         let documents = await this.statementsCollection
             .find()
             .where('categorized')
-            .equals(categorized)
+            .equals(false)
             .exec();
 
-        console.info(`Found ${documents.length} ${categorized} documents`);
+        console.info(`Found ${documents.length} uncategorized documents`);
         return this.convertToJson(documents);
     }
 
     /**
-     * Retrieve all of the statements in the confirmed categories collection.
+     * Retrieve all of the statements with a categorization.
      * */
-    async getConfirmedStatements() {
-        let documents = await this.confirmedStatementsCollection
+    async getCategorizedStatements() {
+        let documents = await this.statementsCollection
             .find()
             .where('categorized')
             .equals(true)
@@ -158,6 +134,14 @@ class BankStatementsDAO {
 
         console.info(`Found ${documents.length} confirmed categorized documents`);
         return this.convertToJson(documents);
+    }
+
+    /**
+     * Retrieve all saved identifiers
+    * */
+    async getIdentifiers() {
+        let rawIdentifiers = await this.categoriesCollection.find().exec();
+        return this.convertToJson(rawIdentifiers);
     }
 
     /**
@@ -170,8 +154,8 @@ class BankStatementsDAO {
         console.info("Entry Description:", entry.description);
         for (let index = 0; index < documents.length; index++) {
             let categoryCandidate = documents[index];
-            console.info("Example identifier:", categoryCandidate.identifier);
-            if (entry.description.includes(categoryCandidate.identifier)) {
+            if (entry.description.toLowerCase().includes(categoryCandidate.identifier.toLowerCase())) {
+                console.info("Found matching identifier:", categoryCandidate.identifier);
                 categoryMatches.push(categoryCandidate);
             }
         }
@@ -180,25 +164,23 @@ class BankStatementsDAO {
     }
 
     /**
-     * Remove all documents in the temporary collection that match the given {@param categorized} flag.
-     * TODO: Improve this mechanism for generalized deletion
+     * Clear temporary collection with all recently loaded statements. TODO: Not complete.
      * */
-    async removeDocuments(categorized) {
-        let removedDocs = await this.statementsCollection
+    async removeBankStatementDocuments() {
+        return this.statementsCollection
             .find()
-            .where('categorized')
-            .equals(categorized)
-            .remove();
-        console.info(`Removed ${removedDocs.length} documents.`);
-        return removedDocs;
+            .remove()
+            .then((removedDocs) => console.info(`Removed ${removedDocs.length} bank statement documents.`));
     }
 
     /**
      * Clear temporary collection with all recently loaded statements. TODO: Not complete.
      * */
-    async removeTemporaryCategorizationCollection() {
-        // await this.statementsCollection.remove();
-        // return await this.initStatementsCollection();
+    async removeCategoryDocuments() {
+        return this.categoriesCollection
+            .find()
+            .remove()
+            .then((removedDocs) => console.info(`Removed ${removedDocs.length} category documents.`));
     }
 
     /**

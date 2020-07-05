@@ -13,10 +13,23 @@ class ProcessorMain {
 
     start() {
         this.bankStatementDAO = getDao();
+        this.listOnStartAutoCategorizationChannel();
         this.listenOnLoadStatementEntryChannel();
         this.listenOnConfirmEntryClassificationChannel();
-        this.listenOnConfirmAllClassificationsChannel();
         this.listenOnExportClassificationChannel();
+        this.listenOnExportIdentifiersChannel();
+    }
+
+    listOnStartAutoCategorizationChannel() {
+        let channel = channels.REQUEST_START_AUTO_CLASSIFICATION;
+        ipcMain.on(channel, (event) => {
+            console.info('Request received on channel:', channel);
+            this.updateAllAutoClassifiedEntries()
+                .then(response => {
+                    console.info('Response sent on channel:', channels.RESPONSE_START_AUTO_CLASSIFICATION);
+                    event.sender.send(channels.RESPONSE_START_AUTO_CLASSIFICATION, response)
+                })
+        })
     }
 
     listenOnLoadStatementEntryChannel() {
@@ -24,7 +37,9 @@ class ProcessorMain {
         ipcMain.on(channel, (event) => {
             console.info('Request received on channel:', channel);
            this.getStatementEntry()
-               .then(entry => { return this.getStatementCategorization(entry); })
+               .then(entry => {
+                   return this.getStatementCategorization(entry);
+               })
                .then(classifications => {
                     console.info('Sending classification:', classifications);
                     console.info('Response sent on channel:', channels.RESPONSE_LOAD_STATEMENT_ENTRY);
@@ -46,48 +61,50 @@ class ProcessorMain {
         });
     }
 
-    listenOnConfirmAllClassificationsChannel() {
-        let channel = channels.REQUEST_CONFIRM_CLASSIFICATIONS;
-
-        ipcMain.on(channel, (event) => {
-            console.info('Request received on channel:', channel);
-            let documentsPromise = this.bankStatementDAO.getStatements(true);
-            documentsPromise
-                .then(documents => {
-                    console.info("Retrieved all categorized statements. Count:", documents.length);
-                    let formattedDocuments = this.formatConfirmedDocuments(documents);
-                    this.bankStatementDAO.bulkInsertConfirmedCategorizedStatement(formattedDocuments)
-                        .then(() => console.info("Saved all categorized bank statements"));
-                })
-                .then(() => {
-                    let docsPromise = this.bankStatementDAO.getConfirmedStatements();
-                    docsPromise
-                        .then(docs => console.info("Number of confirmed documents:", docs.length))
-                        .then(() => this.bankStatementDAO.removeDocuments(true))
-                        .then(() => console.info("Removed all categorized bank statements"));
-                    event.sender.send(channels.RESPONSE_CONFIRM_CLASSIFICATIONS, true);
-                })
-                .catch(err => {
-                    console.error("Failed to complete saving all categorized statements workflow:", err);
-                    event.sender.send(channels.RESPONSE_CONFIRM_CLASSIFICATIONS, false);
-                });
-        });
-    }
-
+    /**
+     * TODO: Only allow exporting once all statements are classified
+     * TODO: Where should we delete the persistent memory stuff?
+    * */
     listenOnExportClassificationChannel() {
         let channel = channels.REQUEST_EXPORT_CLASSIFICATIONS;
         ipcMain.on(channel, (event) => {
             console.info('Request received on channel:', channel);
-            let docsPromise = this.bankStatementDAO.getConfirmedStatements();
+            let docsPromise = this.bankStatementDAO.getCategorizedStatements();
             docsPromise
                 .then(documents => {
                     let formattedDocuments = this.formatConfirmedDocuments(documents);
-                    this.exportToCSV(formattedDocuments)
-                        .then(() => event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, true))
+                    if (formattedDocuments != null && formattedDocuments.length > 0) {
+                        this.exportToCSV(formattedDocuments)
+                            .then(() => {
+                                event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, true);
+                            })
+                    }
                 })
                 .catch(err => {
                     console.error("Failed to complete export workflow:", err);
                     event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
+                });
+        });
+    }
+
+    listenOnExportIdentifiersChannel() {
+        let channel = channels.REQUEST_EXPORT_IDENTIFIERS;
+        ipcMain.on(channel, (event) => {
+            console.info('Request received on channel:', channel);
+            let docsPromise = this.bankStatementDAO.getIdentifiers();
+            docsPromise
+                .then(documents => {
+                    let formattedDocuments = this.formatConfirmedDocuments(documents);
+                    if (formattedDocuments != null && formattedDocuments.length > 0) {
+                        this.exportToCSV(formattedDocuments)
+                            .then(() => {
+                                event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, true)
+                            })
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to complete export workflow for identifiers:", err);
+                    event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, false);
                 });
         });
     }
@@ -107,6 +124,7 @@ class ProcessorMain {
             entryCopy.subCategory = category.subCategory;
             entryCopy.explanation = category.explanation;
             entryCopy.identifier = category.identifier;
+            entryCopy.categorized = true;
             entries.push(entryCopy);
         }
         if (entries.length === 0) {
@@ -128,7 +146,7 @@ class ProcessorMain {
     async getStatementEntry() {
         let entry = null;
         if (this._uncategorized_statements.length === 0 || !this._loaded_statements) {
-            this._uncategorized_statements = await this.bankStatementDAO.getStatements(false);
+            this._uncategorized_statements = await this.bankStatementDAO.getUncategorizedStatements();
             this._loaded_statements = true;
         }
         if (this._uncategorized_statements.length > 0) {
@@ -137,6 +155,30 @@ class ProcessorMain {
         }
         console.info('Loading entry:', entry);
         return entry;
+    }
+
+    async updateAllAutoClassifiedEntries() {
+        let uncategorizedEntries = await this.bankStatementDAO.getUncategorizedStatements();
+        let categorizedEntries = await this.bankStatementDAO.getCategorizedStatements();
+        let entry = (uncategorizedEntries.length > 0) ? uncategorizedEntries.pop() : null;
+        let successCount = categorizedEntries.length;
+        let failCount = 0;
+        while (entry) {
+            let categorizedEntry = await this.getStatementCategorization(entry);
+            if (categorizedEntry == null || !categorizedEntry.mainCategory) {
+                console.info("No auto classification found for:", entry.description);
+                failCount++;
+                entry = uncategorizedEntries.pop();
+                continue;
+            }
+            successCount++;
+            await this.bankStatementDAO.updateStatement(categorizedEntry);
+            entry = uncategorizedEntries.pop();
+        }
+        return {
+            successCount: successCount,
+            failCount: failCount
+        }
     }
 
     async exportToCSV(documents) {

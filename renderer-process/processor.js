@@ -4,25 +4,45 @@ const channels = require("../constants/channels");
 const viewElements = require("./constants/view-elements");
 
 class ProcessorRenderer {
+  buttonStartAutoCategorization = document.getElementById(viewElements.BUTTON_START_AUTO_CATEGORIZATION);
   buttonLoadStatementEntry = document.getElementById(viewElements.BUTTON_LOAD_STATEMENT_ENTRY);
   buttonConfirmEntryClassification = document.getElementById(viewElements.BUTTON_CONFIRM_ENTRY_CLASSIFICATION);
-  buttonConfirmAllClassifications = document.getElementById(viewElements.BUTTON_CONFIRM_ALL_CLASSIFICATIONS);
-  buttonExport = document.getElementById(viewElements.BUTTON_EXPORT);
+  buttonExportBankStatements = document.getElementById(viewElements.BUTTON_EXPORT_BANK_STATEMENTS);
+  buttonExportIdentifiers = document.getElementById(viewElements.BUTTON_EXPORT_IDENTIFIERS);
 
   start() {
     // Channel Listeners
+    this.listOnStartAutoCategorizationChannel();
     this.listenOnLoadStatementEntryChannel();
     this.listenOnConfirmEntryClassificationChannel();
-    this.listenOnConfirmAllClassificationsChannel();
     this.listenOnExportClassificationsChannel();
+    this.listenOnExportIdentifiersChannel();
 
     // Event Listeners
+    this.listForStartAutoCategorizationClick();
     this.listenForLoadStatementEntryClick();
     this.listenForConfirmEntryClassificationClick();
-    this.listenForConfirmAllClassificationsClick();
     this.listenForExportClassificationsClick();
+    this.listenForExportIdentifiersClick();
 
     this.statement = null;
+  }
+
+  listForStartAutoCategorizationClick() {
+    let channel = channels.REQUEST_START_AUTO_CLASSIFICATION;
+    this.buttonStartAutoCategorization.addEventListener('click', () => {
+      console.info('Request sent on channel:', channel);
+      ipcRenderer.send(channel);
+    })
+  }
+
+  listOnStartAutoCategorizationChannel() {
+    let channel = channels.RESPONSE_START_AUTO_CLASSIFICATION;
+    ipcRenderer.on(channel, (event, response) => {
+      console.info('Response received on channel:', channel);
+      document.getElementById(viewElements.DATA_AUTO_CATEGORIZATION_SUCCESS_COUNT).innerHTML = response.successCount;
+      document.getElementById(viewElements.DATA_AUTO_CATEGORIZATION_FAIL_COUNT).innerHTML = response.failCount;
+    })
   }
 
   listenForLoadStatementEntryClick() {
@@ -81,29 +101,9 @@ class ProcessorRenderer {
     })
   }
 
-  listenForConfirmAllClassificationsClick() {
-    let channel = channels.REQUEST_CONFIRM_CLASSIFICATIONS;
-    this.buttonConfirmAllClassifications.addEventListener('click', () => {
-      console.info('Request received on channel:', channel);
-      ipcRenderer.send(channel);
-    })
-  }
-
-  listenOnConfirmAllClassificationsChannel() {
-    let channel = channels.RESPONSE_CONFIRM_CLASSIFICATIONS;
-    ipcRenderer.on(channel, (event, success) => {
-      console.info('Response received on channel:', channel);
-      if (!success) {
-        console.error('Failed to save all categorizations.');
-        return;
-      }
-      console.info('Successfully saved all categorizations');
-    })
-  }
-
   listenForExportClassificationsClick() {
     let channel = channels.REQUEST_EXPORT_CLASSIFICATIONS;
-    this.buttonExport.addEventListener('click', () => {
+    this.buttonExportBankStatements.addEventListener('click', () => {
       console.info('Request received on channel:', channel);
       ipcRenderer.send(channel);
     })
@@ -114,10 +114,30 @@ class ProcessorRenderer {
     ipcRenderer.on(channel, (event, success) => {
       console.info('Response received on channel:', channel);
       if (!success) {
-        console.error('Failed to export all files.');
+        console.error('Failed to export all bank statements.');
         return;
       }
-      console.info('Successfully exported all files.');
+      console.info('Successfully exported all bank statements.');
+    })
+  }
+
+  listenForExportIdentifiersClick() {
+    let channel = channels.REQUEST_EXPORT_IDENTIFIERS;
+    this.buttonExportIdentifiers.addEventListener('click', () => {
+      console.info('Request received on channel:', channel);
+      ipcRenderer.send(channel);
+    })
+  }
+
+  listenOnExportIdentifiersChannel() {
+    let channel = channels.RESPONSE_EXPORT_IDENTIFIERS;
+    ipcRenderer.on(channel, (event, success) => {
+      console.info('Response received on channel:', channel);
+      if (!success) {
+        console.error('Failed to export all identifiers.');
+        return;
+      }
+      console.info('Successfully exported all identifiers.');
     })
   }
 

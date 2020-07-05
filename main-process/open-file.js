@@ -5,7 +5,7 @@ const channels = require('../constants/channels');
 const settingKeys = require('../constants/settings');
 
 const {getDao} = require("./dao/bank-statement-dao");
-const {constructDocument, formatStatement} = require('./dto/translation-utils');
+const {constructIdentifierDocument, constructDocument, formatStatement} = require('./dto/translation-utils');
 const {readCSV} = require('./utils/csv-reader');
 
 class OpenFileMain {
@@ -16,27 +16,52 @@ class OpenFileMain {
 
   start() {
     this.bankStatementDAO = getDao();
-    this.listenOnOpenFileChannel();
-    this.listenOnLoadFileChannel();
+    this.listenOnSelectBankStatementFileChannel();
+    this.listenOnLoadBankStatementChannel();
+    this.listenOnSelectIdentifiersFileChannel();
+    this.listenOnLoadIdentifiersChannel();
   }
 
-  listenOnOpenFileChannel() {
-    ipcMain.on(channels.REQUEST_SELECT_STATEMENT, (event) => {
-      dialog.showOpenDialog(this.WINDOW_OPTIONS).then(response => this.sendFileNameToRenderProcess(event, response));
+  listenOnSelectBankStatementFileChannel() {
+    ipcMain.on(channels.REQUEST_SELECT_STATEMENT_FILE, (event) => {
+      dialog.showOpenDialog(this.WINDOW_OPTIONS).then(response =>
+          this.sendFileNameToRenderProcess(event, response, channels.RESPONSE_SELECT_STATEMENT));
     });
   }
 
-  listenOnLoadFileChannel() {
+  listenOnSelectIdentifiersFileChannel() {
+    let channel = channels.REQUEST_SELECT_IDENTIFIERS_FILE;
+    ipcMain.on(channel, (event) => {
+      console.info('Request received on channel:', channel);
+      dialog.showOpenDialog(this.WINDOW_OPTIONS).then(response =>
+          this.sendFileNameToRenderProcess(event, response, channels.RESPONSE_LOAD_IDENTIFIERS));
+    });
+  }
+
+  listenOnLoadBankStatementChannel() {
     ipcMain.on(channels.REQUEST_LOAD_STATEMENT, (event, selectedFile) => {
       console.info(`Loading bank statement for processing: ${selectedFile}`);
-      if (selectedFile) {
-        this.bankStatementDAO.removeTemporaryCategorizationCollection()
-            .then(readCSV(selectedFile, (data) => this.processBankStatement(data)))
+      if (!selectedFile) {
+        console.info("No bank statement file selected.")
       }
+      // this.bankStatementDAO.removeBankStatementDocuments()
+      readCSV(selectedFile, (data) => this.processBankStatement(data));
+    });
+  }
+
+  listenOnLoadIdentifiersChannel() {
+    ipcMain.on(channels.REQUEST_LOAD_IDENTIFIERS, (event, selectedFile, loadConfig) => {
+      console.info(`Loading bank statement for processing: ${selectedFile}`);
+      if (!selectedFile) {
+        console.info("No identifiers file selected.")
+      }
+      // this.bankStatementDAO.removeCategoryDocuments().then(
+      readCSV(selectedFile, (data) => this.processIdentifiersFile(data, loadConfig));
     });
   }
 
   async processBankStatement(data) {
+    console.info("Processing bank statement file");
     let start = settings.get(settingKeys.ROW_START);
     let documents = [];
     for (let i = start; i < data.length; i++) {
@@ -44,17 +69,24 @@ class OpenFileMain {
       let document = constructDocument(statement);
       documents.push(document);
     }
-    await this.bankStatementDAO.bulkInsertStatement(documents);
+    return await this.bankStatementDAO.bulkInsertStatement(documents);
   }
 
-  async insert(document) {
-    await this.bankStatementDAO.insertStatement(document);
+  async processIdentifiersFile(data, loadConfig) {
+    console.info("Processing identifiers file");
+    let start = loadConfig.startRowIndex;
+    let identifiers = [];
+    for (let i = start; i < data.length; i++) {
+      let identifierDocument = constructIdentifierDocument(data[i], loadConfig);
+      identifiers.push(identifierDocument);
+    }
+    return await this.bankStatementDAO.bulkInsertCategorizations(identifiers);
   }
 
-  sendFileNameToRenderProcess(event, response) {
+  sendFileNameToRenderProcess(event, response, channel) {
     console.info(`Chosen file path: ${response.filePaths}`);
     if (response.filePaths.length) {
-      event.sender.send(channels.RESPONSE_SELECT_STATEMENT, response.filePaths[0])
+      event.sender.send(channel, response.filePaths[0])
     }
   }
 }

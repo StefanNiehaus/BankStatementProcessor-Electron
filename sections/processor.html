@@ -12,8 +12,25 @@
 
         <div class="section-view">
             <div class="section-view-wrapper">
-                <button id="process-statements-toggle" class="js-container-target section-view-toggle-button">Categorization Processor
-                    <div class="section-view-meta u-avoid-clicks">Supports: Automatic and Manual Classification</div>
+                <button id="process-automatic-statements-toggle" class="js-container-target section-view-toggle-button">Automatic Categorization
+                    <div class="section-view-meta u-avoid-clicks">Supports: Automatic Classification</div>
+                </button>
+
+                <div class="section-view-box">
+                    <div class="section-view-controls">
+                        <button class="section-view-button" id="button-start-automatic-categorization">Start Auto Categorization</button>
+                    </div>
+
+                    Categorized Statements: <data id="data-auto-categorized-success-count" value="">0</data><br>
+                    Uncategorized Statements: <data id="data-auto-categorized-fail-count" value="">0</data>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-view">
+            <div class="section-view-wrapper">
+                <button id="process-statements-toggle" class="js-container-target section-view-toggle-button">Manual Categorization
+                    <div class="section-view-meta u-avoid-clicks">Supports: Manual Classification</div>
                 </button>
 
                 <div class="section-view-box">
@@ -60,10 +77,13 @@
                 </button>
 
                 <div class="section-view-box">
-
+                    <p>
+                        You will only be allowed to export the bank statements once all loaded statements have been categorized.
+                    </p>
                     <div class="section-view-controls">
-                        <button class="section-view-button" id="button-confirm-categorizations">Confirm Classifications</button>
-                        <button class="section-view-button" id="button-confirm-export">Export</button>
+<!--                        <button class="section-view-button" id="button-confirm-categorizations">Confirm Classifications</button>-->
+                        <button class="section-view-button" id="button-confirm-export">Export Statements</button><br>
+                        <button class="section-view-button" id="button-export-identifiers">Export Identifiers</button>
                     </div>
                 </div>
             </div>

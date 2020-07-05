@@ -20,10 +20,10 @@
         <div class="section-view-box">
           <div class="section-view-controls">
             <button class="section-view-button" id="select-file">Load Statement File</button>
+            <span class="section-view-response" id="data-bank-statement-file"></span>
           </div><br>
 
           <div id="open-file-details">
-            File Path: <data class="section-view-response" id="selected-file" value=""></data><br>
             <label for="row-start">Starting row: </label><select id="row-start">
             <option>1</option>
             <option selected="selected">2</option>
@@ -32,7 +32,7 @@
             <option>5</option>
             <option>6</option>
           </select><br>
-            <label for="column-transaction-date">Column transaction date: </label><select id="column-transaction-date">
+            <label for="column-transaction-date">Column date: </label><select id="column-transaction-date">
             <option selected="selected">1</option>
             <option>2</option>
             <option>3</option>
@@ -40,7 +40,7 @@
             <option>5</option>
             <option>6</option>
           </select><br>
-            <label for="column-description">Column description: </label><select id="column-description">
+            <label for="column-amount">Column amount: </label><select id="column-amount">
             <option>1</option>
             <option>2</option>
             <option selected="selected">3</option>
@@ -48,7 +48,7 @@
             <option>5</option>
             <option>6</option>
           </select><br>
-            <label for="column-amount">Column amount: </label><select id="column-amount">
+            <label for="column-balance">Column balance: </label><select id="column-balance">
             <option>1</option>
             <option>2</option>
             <option>3</option>
@@ -56,35 +56,37 @@
             <option>5</option>
             <option>6</option>
           </select><br>
-            <label for="column-balance">Column balance: </label><select id="column-balance">
+            <label for="column-description">Column description: </label><select id="column-description">
             <option>1</option>
-            <option>2</option>
+            <option selected="selected">2</option>
             <option>3</option>
             <option>4</option>
             <option>5</option>
-            <option selected="selected">5</option>
+            <option>6</option>
           </select>
           </div><br>
 
           <div class="section-view-controls">
-            <button class="section-view-button" id="confirm-input-configuration">Confirm</button>
-          </div>
-
+            <button class="section-view-button" id="button-load-identifier-file">Load Identifiers</button>
+            <span class="section-view-response" id="data-identifiers-file"></span>
+          </div><br>
         </div>
       </div>
     </div>
 
 
-    <!--    <div class="section-view">-->
-    <!--      <div class="section-view-wrapper">-->
-    <!--        <button id="file-configuration-toggle" class="js-container-target section-view-toggle-button">Configure Statement Input-->
-    <!--          <div class="section-view-meta u-avoid-clicks">Purpose: Manual Override</div>-->
-    <!--        </button>-->
-    <!--        <div class="section-view-box">-->
-
-    <!--        </div>-->
-    <!--      </div>-->
-    <!--    </div>-->
+    <div class="section-view">
+      <div class="section-view-wrapper">
+        <button id="file-configuration-toggle" class="js-container-target section-view-toggle-button">Open Identification File
+          <div class="section-view-meta u-avoid-clicks">Supports: CSV Files</div>
+        </button>
+        <div class="section-view-box">
+          <div class="section-view-controls">
+            <button class="section-view-button" id="confirm-input-configuration">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
       require('./renderer-process/open-file');
