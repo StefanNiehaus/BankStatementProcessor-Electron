@@ -16,6 +16,10 @@ const BUTTON_CONFIRM_ALL_CLASSIFICATIONS = 'button-confirm-categorizations';
 const BUTTON_EXPORT_BANK_STATEMENTS = 'button-confirm-export';
 const BUTTON_EXPORT_IDENTIFIERS = 'button-export-identifiers';
 
+// Labels
+const LABEL_SOURCE_STATEMENT = "label-source-statement";
+const LABEL_CATEGORY_STATEMENT = "label-category-statement";
+
 // Data Elements
 const DATA_BANK_STATEMENT_FILE = 'data-bank-statement-file';
 const DATA_IDENTIFIERS_FILE = 'data-identifiers-file';
@@ -55,6 +59,9 @@ module.exports = {
     BUTTON_CONFIRM_ALL_CLASSIFICATIONS,
     BUTTON_EXPORT_BANK_STATEMENTS,
     BUTTON_EXPORT_IDENTIFIERS,
+
+    LABEL_SOURCE_STATEMENT,
+    LABEL_CATEGORY_STATEMENT,
 
     DATA_AUTO_CATEGORIZATION_SUCCESS_COUNT,
     DATA_AUTO_CATEGORIZATION_FAIL_COUNT,

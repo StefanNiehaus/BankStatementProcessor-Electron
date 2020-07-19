@@ -16,8 +16,9 @@ class ProcessorMain {
         this.listOnStartAutoCategorizationChannel();
         this.listenOnLoadStatementEntryChannel();
         this.listenOnConfirmEntryClassificationChannel();
-        this.listenOnExportClassificationChannel();
+        this.listenOnExportCategorizedBankStatementsChannel();
         this.listenOnExportIdentifiersChannel();
+        this.listenOnGetSavedCategorizations();
     }
 
     listOnStartAutoCategorizationChannel() {
@@ -48,6 +49,15 @@ class ProcessorMain {
         });
     }
 
+    listenOnGetSavedCategorizations() {
+        let channel = channels.REQUEST_SAVED_CATEGORIZATIONS;
+        ipcMain.on(channel, (event) => {
+            console.info('Request received on channel:', channel);
+            this.sendCategoriesMap(event)
+                .then(() => console.info('Successfully sent category map to renderer.'));
+        })
+    }
+
     listenOnConfirmEntryClassificationChannel() {
         let channel = channels.REQUEST_SAVE_STATEMENT_ENTRY_CLASSIFICATION;
         ipcMain.on(channel, (event, statement) => {
@@ -63,27 +73,13 @@ class ProcessorMain {
 
     /**
      * TODO: Only allow exporting once all statements are classified
-     * TODO: Where should we delete the persistent memory stuff?
     * */
-    listenOnExportClassificationChannel() {
+    listenOnExportCategorizedBankStatementsChannel() {
         let channel = channels.REQUEST_EXPORT_CLASSIFICATIONS;
         ipcMain.on(channel, (event) => {
             console.info('Request received on channel:', channel);
-            let docsPromise = this.bankStatementDAO.getCategorizedStatements();
-            docsPromise
-                .then(documents => {
-                    let formattedDocuments = this.formatConfirmedDocuments(documents);
-                    if (formattedDocuments != null && formattedDocuments.length > 0) {
-                        this.exportToCSV(formattedDocuments)
-                            .then(() => {
-                                event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, true);
-                            })
-                    }
-                })
-                .catch(err => {
-                    console.error("Failed to complete export workflow:", err);
-                    event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
-                });
+            this.exportCategorizedStatements(event)
+                .then(() => 'Exporting bank statements workflow complete.');
         });
     }
 
@@ -91,22 +87,61 @@ class ProcessorMain {
         let channel = channels.REQUEST_EXPORT_IDENTIFIERS;
         ipcMain.on(channel, (event) => {
             console.info('Request received on channel:', channel);
-            let docsPromise = this.bankStatementDAO.getIdentifiers();
-            docsPromise
-                .then(documents => {
-                    let formattedDocuments = this.formatConfirmedDocuments(documents);
-                    if (formattedDocuments != null && formattedDocuments.length > 0) {
-                        this.exportToCSV(formattedDocuments)
-                            .then(() => {
-                                event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, true)
-                            })
-                    }
-                })
-                .catch(err => {
-                    console.error("Failed to complete export workflow for identifiers:", err);
-                    event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, false);
-                });
+            this.exportIdentifiers(event)
+                .then(() => 'Exporting categorizations workflow complete.');
         });
+    }
+
+    async exportCategorizedStatements(event) {
+        try {
+            let uncategorizedEntries = await this.bankStatementDAO.getUncategorizedStatements();
+
+            if (uncategorizedEntries.length > 0) {
+                let options = {
+                    type: 'info',
+                    title: 'Information',
+                    message: `Found ${uncategorizedEntries.length} uncategorized statements. First complete the categorization process.`,
+                    buttons: ['Okay']
+                };
+
+                await dialog.showMessageBox(options);
+                event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
+                return;
+            }
+
+            let documents = await this.bankStatementDAO.getCategorizedStatements();
+            let formattedDocuments = this.formatConfirmedDocuments(documents);
+            if (formattedDocuments != null && formattedDocuments.length > 0) {
+                await this.exportToCSV(formattedDocuments);
+            } else {
+                let options = {
+                    type: 'info',
+                    title: 'Information',
+                    message: `There is nothing to export.`,
+                    buttons: ['Okay']
+                };
+                await dialog.showMessageBox(options);
+                event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
+            }
+        } catch (err) {
+            console.error('Failed to complete export workflow:', err);
+            dialog.showErrorBox('Statement Export Failed', err);
+            event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
+        }
+    }
+
+    async exportIdentifiers(event) {
+        try {
+            let documents = await this.bankStatementDAO.getIdentifiers();
+            let formattedDocuments = this.formatConfirmedDocuments(documents);
+            if (formattedDocuments != null && formattedDocuments.length > 0) {
+                await this.exportToCSV(formattedDocuments);
+            }
+        } catch (err) {
+            console.error("Failed to export identifiers to CSV:", err);
+            dialog.showErrorBox('Categories Export Failed', err);
+            event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, err);
+        }
     }
 
     async getStatementCategorization(entry) {
@@ -215,6 +250,50 @@ class ProcessorMain {
 
     getHeader() {
         return ['transactionDate', 'description', 'amount', 'balance', 'source', 'mainCategory', 'subCategory', 'explanation'];
+    }
+
+    async sendCategoriesMap(event) {
+        let categoryEntries = await this.bankStatementDAO.getIdentifiers();
+
+        let source = categoryEntries[0]['source'];
+        let category = categoryEntries[0]['mainCategory'];
+        let subCategory = categoryEntries[0]['subCategory'];
+
+        let subCategorySet = new Set();
+        subCategorySet.add(subCategory);
+        let mainCategoryMap = new Map();
+        mainCategoryMap.set(category, subCategorySet);
+        let sourceCategoryMap = new Map();
+        sourceCategoryMap.set(source, mainCategoryMap);
+
+        for (let row = 1; row < categoryEntries.length; row++) {
+            let source = categoryEntries[row]['source'];
+            let category = categoryEntries[row]['mainCategory'];
+            let subCategory = categoryEntries[row]['subCategory'];
+            console.info(subCategory);
+
+            if (sourceCategoryMap.has(source)) {
+                let categoryMap = sourceCategoryMap.get(source);
+                if (categoryMap.has(category)) {
+                    let subCategorySet = categoryMap.get(category);
+                    subCategorySet.add(subCategory);
+                    categoryMap.set(category, subCategorySet);
+                } else {
+                    let subCategorySet = new Set();
+                    subCategorySet.add(subCategory)
+                    categoryMap.set(category, subCategorySet);
+                }
+                sourceCategoryMap.set(source, categoryMap);
+            } else {
+                let subCategorySet = new Set();
+                subCategorySet.add(subCategory);
+                let categoryMap = new Map();
+                categoryMap.set(category, subCategorySet);
+                sourceCategoryMap.set(source, categoryMap);
+            }
+        }
+        console.info(sourceCategoryMap);
+        event.returnValue = sourceCategoryMap;
     }
 }
 

@@ -24,9 +24,12 @@ class OpenFileRenderer {
 
   listenForOpenFileClick() {
     let channel = channels.REQUEST_SELECT_STATEMENT_FILE;
-    console.info("YOYIOUDJBSADJAIUS:", channel);
     this.selectDirBtn.addEventListener('click', () => {
       console.info('Request sent on channel:', channel);
+      let success = ipcRenderer.sendSync(channels.REQUEST_DELETE_STATEMENTS);
+      if (!success) {
+        console.info('Failed to clear current bank statements loaded in the application.');
+      }
       ipcRenderer.send(channel);
     });
   }
@@ -43,6 +46,10 @@ class OpenFileRenderer {
   listenForLoadIdentifiersClick() {
     this.selectIdentifiersBtn.addEventListener('click', () => {
       console.info(`Sending load identifiers file event from renderer process to main process`);
+      let success = ipcRenderer.sendSync(channels.REQUEST_DELETE_CATEGORIZATIONS);
+      if (!success) {
+        console.info('Failed to clear current identifiers loaded in the application.');
+      }
       ipcRenderer.send(channels.REQUEST_SELECT_IDENTIFIERS_FILE);
     });
   }

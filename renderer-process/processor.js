@@ -10,6 +10,9 @@ class ProcessorRenderer {
   buttonExportBankStatements = document.getElementById(viewElements.BUTTON_EXPORT_BANK_STATEMENTS);
   buttonExportIdentifiers = document.getElementById(viewElements.BUTTON_EXPORT_IDENTIFIERS);
 
+  labelSourceStatement = document.getElementById(viewElements.LABEL_SOURCE_STATEMENT);
+  labelCategoryStatement = document.getElementById(viewElements.LABEL_CATEGORY_STATEMENT);
+
   start() {
     // Channel Listeners
     this.listOnStartAutoCategorizationChannel();
@@ -24,8 +27,11 @@ class ProcessorRenderer {
     this.listenForConfirmEntryClassificationClick();
     this.listenForExportClassificationsClick();
     this.listenForExportIdentifiersClick();
+    this.listenForLabelSourceChange();
+    this.listenForLabelMainCategoryChange();
 
     this.statement = null;
+    this.categoriesMap = new Map();
   }
 
   listForStartAutoCategorizationClick() {
@@ -63,13 +69,17 @@ class ProcessorRenderer {
       console.info('Response received on channel:', channel);
       console.info('Received statement:', statement);
 
-      if (!statement) { return; }
+      if (!statement) {
+        return;
+      }
 
       this.statement = statement;
-
       this.setCategorizationDetails(statement);
 
-      // document.getElementById(viewElements.DATA_STATEMENT_SOURCE_LIST).innerHTML = options;
+      this.categoriesMap = ipcRenderer.sendSync(channels.REQUEST_SAVED_CATEGORIZATIONS);
+
+      let sources = Array.from(this.categoriesMap.keys());
+      document.getElementById(viewElements.DATA_STATEMENT_SOURCE_LIST).innerHTML = this.createOptionList(sources);
     })
   }
 
@@ -113,11 +123,6 @@ class ProcessorRenderer {
     let channel = channels.RESPONSE_EXPORT_CLASSIFICATIONS;
     ipcRenderer.on(channel, (event, success) => {
       console.info('Response received on channel:', channel);
-      if (!success) {
-        console.error('Failed to export all bank statements.');
-        return;
-      }
-      console.info('Successfully exported all bank statements.');
     })
   }
 
@@ -126,6 +131,52 @@ class ProcessorRenderer {
     this.buttonExportIdentifiers.addEventListener('click', () => {
       console.info('Request received on channel:', channel);
       ipcRenderer.send(channel);
+    })
+  }
+
+  listenForLabelSourceChange() {
+    this.labelSourceStatement.addEventListener('change', () => {
+      console.info('Request received on source label change');
+      let newSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
+      console.info('New source value:', newSource);
+
+      if (!newSource || !this.categoriesMap.has(newSource)) {
+        document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = null;
+        document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
+        return;
+      }
+
+      let categories = Array.from(this.categoriesMap.get(newSource).keys());
+      console.info('Categories:', newSource);
+      document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_LIST).innerHTML = this.createOptionList(categories);
+    })
+  }
+
+  listenForLabelMainCategoryChange() {
+    this.labelCategoryStatement.addEventListener('change', () => {
+      console.info('Request received on category label change');
+      let newCategory = document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value;
+      console.info('New category value:', newCategory);
+
+      let currentSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
+
+      // this should always be false but added here for user experience in case something is wrong
+      if (!this.categoriesMap.has(currentSource)) {
+        return;
+      }
+
+      let categoryMap = this.categoriesMap.get(currentSource);
+      if (!newCategory || !categoryMap.has(newCategory)) {
+        document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
+        return;
+      }
+
+      let subCategories = [];
+      categoryMap.get(newCategory).forEach(item => subCategories.push(item));
+
+      console.info('Sub categories:', subCategories);
+      document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_LIST).innerHTML = this.createOptionList(subCategories);
+
     })
   }
 

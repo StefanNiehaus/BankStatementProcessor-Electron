@@ -20,6 +20,8 @@ class OpenFileMain {
     this.listenOnLoadBankStatementChannel();
     this.listenOnSelectIdentifiersFileChannel();
     this.listenOnLoadIdentifiersChannel();
+    this.listenOnDeleteBankStatementsChannel();
+    this.listenOnDeleteIdentifiersChannel();
   }
 
   listenOnSelectBankStatementFileChannel() {
@@ -57,6 +59,22 @@ class OpenFileMain {
       }
       // this.bankStatementDAO.removeCategoryDocuments().then(
       readCSV(selectedFile, (data) => this.processIdentifiersFile(data, loadConfig));
+    });
+  }
+
+  listenOnDeleteBankStatementsChannel() {
+    ipcMain.on(channels.REQUEST_DELETE_STATEMENTS, (event) => {
+      this.bankStatementDAO.removeBankStatementDocuments().then(() => {
+        event.returnValue = true;
+      })
+    });
+  }
+
+  listenOnDeleteIdentifiersChannel() {
+    ipcMain.on(channels.REQUEST_DELETE_CATEGORIZATIONS, (event) => {
+      this.bankStatementDAO.removeCategoryDocuments().then(() => {
+        event.returnValue = true;
+      })
     });
   }
 

@@ -11,6 +11,10 @@ const REQUEST_SAVE_STATEMENT_ENTRY_CLASSIFICATION = 'channel-request-save-entry-
 const REQUEST_EXPORT_CLASSIFICATIONS = 'channel-request-export-classifications';
 const REQUEST_EXPORT_IDENTIFIERS = 'channel-request-export-identifiers';
 
+const REQUEST_SAVED_CATEGORIZATIONS = 'channel-get-categorizations';
+const REQUEST_DELETE_CATEGORIZATIONS = 'channel-delete-categorizations';
+const REQUEST_DELETE_STATEMENTS = 'channel-delete-statements';
+
 // Response channels: main to renderer
 const RESPONSE_SELECT_STATEMENT = 'channel-response-select-bank-statement-file';
 const RESPONSE_LOAD_IDENTIFIERS = 'channel-response-select-identifiers-file';
@@ -33,6 +37,10 @@ module.exports = {
     REQUEST_SAVE_STATEMENT_ENTRY_CLASSIFICATION,
     REQUEST_EXPORT_CLASSIFICATIONS,
     REQUEST_EXPORT_IDENTIFIERS,
+
+    REQUEST_SAVED_CATEGORIZATIONS,
+    REQUEST_DELETE_CATEGORIZATIONS,
+    REQUEST_DELETE_STATEMENTS,
 
     RESPONSE_SELECT_STATEMENT,
     RESPONSE_LOAD_STATEMENT_ENTRY,
