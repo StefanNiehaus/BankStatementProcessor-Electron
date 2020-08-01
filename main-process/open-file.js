@@ -8,6 +8,9 @@ const {getDao} = require("./dao/bank-statement-dao");
 const {constructIdentifierDocument, constructDocument, formatStatement} = require('./dto/translation-utils');
 const {readCSV} = require('./utils/csv-reader');
 
+const log4js = require('log4js');
+let log = log4js.getLogger("app");
+
 class OpenFileMain {
   WINDOW_OPTIONS = {
     properties: ['openFile'],
@@ -34,7 +37,7 @@ class OpenFileMain {
   listenOnSelectIdentifiersFileChannel() {
     let channel = channels.REQUEST_SELECT_IDENTIFIERS_FILE;
     ipcMain.on(channel, (event) => {
-      console.info('Request received on channel:', channel);
+      log.info('Request received on channel:', channel);
       dialog.showOpenDialog(this.WINDOW_OPTIONS).then(response =>
           this.sendFileNameToRenderProcess(event, response, channels.RESPONSE_LOAD_IDENTIFIERS));
     });
@@ -42,9 +45,9 @@ class OpenFileMain {
 
   listenOnLoadBankStatementChannel() {
     ipcMain.on(channels.REQUEST_LOAD_STATEMENT, (event, selectedFile) => {
-      console.info(`Loading bank statement for processing: ${selectedFile}`);
+      log.info(`Loading bank statement for processing: ${selectedFile}`);
       if (!selectedFile) {
-        console.info("No bank statement file selected.")
+        log.info("No bank statement file selected.")
       }
       // this.bankStatementDAO.removeBankStatementDocuments()
       readCSV(selectedFile, (data) => this.processBankStatement(data));
@@ -53,9 +56,9 @@ class OpenFileMain {
 
   listenOnLoadIdentifiersChannel() {
     ipcMain.on(channels.REQUEST_LOAD_IDENTIFIERS, (event, selectedFile, loadConfig) => {
-      console.info(`Loading bank statement for processing: ${selectedFile}`);
+      log.info(`Loading bank statement for processing: ${selectedFile}`);
       if (!selectedFile) {
-        console.info("No identifiers file selected.")
+        log.info("No identifiers file selected.")
       }
       // this.bankStatementDAO.removeCategoryDocuments().then(
       readCSV(selectedFile, (data) => this.processIdentifiersFile(data, loadConfig));
@@ -79,7 +82,7 @@ class OpenFileMain {
   }
 
   async processBankStatement(data) {
-    console.info("Processing bank statement file");
+    log.info("Processing bank statement file");
     let start = settings.get(settingKeys.ROW_START);
     let documents = [];
     for (let i = start; i < data.length; i++) {
@@ -91,7 +94,7 @@ class OpenFileMain {
   }
 
   async processIdentifiersFile(data, loadConfig) {
-    console.info("Processing identifiers file");
+    log.info("Processing identifiers file");
     let start = loadConfig.startRowIndex;
     let identifiers = [];
     for (let i = start; i < data.length; i++) {
@@ -102,7 +105,7 @@ class OpenFileMain {
   }
 
   sendFileNameToRenderProcess(event, response, channel) {
-    console.info(`Chosen file path: ${response.filePaths}`);
+    log.info(`Chosen file path: ${response.filePaths}`);
     if (response.filePaths.length) {
       event.sender.send(channel, response.filePaths[0])
     }

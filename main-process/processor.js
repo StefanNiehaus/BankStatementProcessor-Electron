@@ -6,6 +6,9 @@ let channels = require("../constants/channels");
 const {constructCategoryIdentifierDocument} = require("./dto/translation-utils");
 let { getDao } = require("./dao/bank-statement-dao");
 
+const log4js = require('log4js');
+let log = log4js.getLogger("app");
+
 class ProcessorMain {
 
     _loaded_statements = false;
@@ -24,10 +27,10 @@ class ProcessorMain {
     listOnStartAutoCategorizationChannel() {
         let channel = channels.REQUEST_START_AUTO_CLASSIFICATION;
         ipcMain.on(channel, (event) => {
-            console.info('Request received on channel:', channel);
+            log.info('Request received on channel:', channel);
             this.updateAllAutoClassifiedEntries()
                 .then(response => {
-                    console.info('Response sent on channel:', channels.RESPONSE_START_AUTO_CLASSIFICATION);
+                    log.info('Response sent on channel:', channels.RESPONSE_START_AUTO_CLASSIFICATION);
                     event.sender.send(channels.RESPONSE_START_AUTO_CLASSIFICATION, response)
                 })
         })
@@ -36,14 +39,14 @@ class ProcessorMain {
     listenOnLoadStatementEntryChannel() {
         let channel = channels.REQUEST_LOAD_STATEMENT_ENTRY;
         ipcMain.on(channel, (event) => {
-            console.info('Request received on channel:', channel);
+            log.info('Request received on channel:', channel);
            this.getStatementEntry()
                .then(entry => {
                    return this.getStatementCategorization(entry);
                })
                .then(classifications => {
-                    console.info('Sending classification:', classifications);
-                    console.info('Response sent on channel:', channels.RESPONSE_LOAD_STATEMENT_ENTRY);
+                    log.info('Sending classification:', classifications);
+                    log.info('Response sent on channel:', channels.RESPONSE_LOAD_STATEMENT_ENTRY);
                     event.sender.send(channels.RESPONSE_LOAD_STATEMENT_ENTRY, classifications);
                 });
         });
@@ -52,17 +55,17 @@ class ProcessorMain {
     listenOnGetSavedCategorizations() {
         let channel = channels.REQUEST_SAVED_CATEGORIZATIONS;
         ipcMain.on(channel, (event) => {
-            console.info('Request received on channel:', channel);
+            log.info('Request received on channel:', channel);
             this.sendCategoriesMap(event)
-                .then(() => console.info('Successfully sent category map to renderer.'));
+                .then(() => log.info('Successfully sent category map to renderer.'));
         })
     }
 
     listenOnConfirmEntryClassificationChannel() {
         let channel = channels.REQUEST_SAVE_STATEMENT_ENTRY_CLASSIFICATION;
         ipcMain.on(channel, (event, statement) => {
-            console.info('Request received on channel:', channel);
-            console.info('Received categorized statement:', statement);
+            log.info('Request received on channel:', channel);
+            log.info('Received categorized statement:', statement);
 
             let document = constructCategoryIdentifierDocument(statement);
             this.bankStatementDAO.insertCategorization(document)
@@ -71,13 +74,10 @@ class ProcessorMain {
         });
     }
 
-    /**
-     * TODO: Only allow exporting once all statements are classified
-    * */
     listenOnExportCategorizedBankStatementsChannel() {
         let channel = channels.REQUEST_EXPORT_CLASSIFICATIONS;
         ipcMain.on(channel, (event) => {
-            console.info('Request received on channel:', channel);
+            log.info('Request received on channel:', channel);
             this.exportCategorizedStatements(event)
                 .then(() => 'Exporting bank statements workflow complete.');
         });
@@ -86,7 +86,7 @@ class ProcessorMain {
     listenOnExportIdentifiersChannel() {
         let channel = channels.REQUEST_EXPORT_IDENTIFIERS;
         ipcMain.on(channel, (event) => {
-            console.info('Request received on channel:', channel);
+            log.info('Request received on channel:', channel);
             this.exportIdentifiers(event)
                 .then(() => 'Exporting categorizations workflow complete.');
         });
@@ -124,7 +124,7 @@ class ProcessorMain {
                 event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
             }
         } catch (err) {
-            console.error('Failed to complete export workflow:', err);
+            log.error('Failed to complete export workflow:', err);
             dialog.showErrorBox('Statement Export Failed', err);
             event.sender.send(channels.RESPONSE_EXPORT_CLASSIFICATIONS, false);
         }
@@ -138,7 +138,7 @@ class ProcessorMain {
                 await this.exportToCSV(formattedDocuments);
             }
         } catch (err) {
-            console.error("Failed to export identifiers to CSV:", err);
+            log.error("Failed to export identifiers to CSV:", err);
             dialog.showErrorBox('Categories Export Failed', err);
             event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, err);
         }
@@ -150,7 +150,7 @@ class ProcessorMain {
         }
         let entries = [];
         let categories = await this.bankStatementDAO.getStatementCategorization(entry);
-        console.info(`Number of categories found: ${categories.length}`);
+        log.info(`Number of categories found: ${categories.length}`);
         for (let index = 0; index < categories.length; index++) {
             let category = categories[index];
             let entryCopy = await JSON.parse(JSON.stringify(entry));
@@ -171,7 +171,7 @@ class ProcessorMain {
     formatConfirmedDocuments(documents) {
         for (let index = 0; index < documents.length; index++) {
             let document = documents[index];
-            console.info("Inspecting document:", documents);
+            log.info("Inspecting document:", documents);
             delete document._id;
             delete document._rev;
         }
@@ -185,10 +185,10 @@ class ProcessorMain {
             this._loaded_statements = true;
         }
         if (this._uncategorized_statements.length > 0) {
-            console.info("Entries exist!");
+            log.info("Entries exist!");
             entry = this._uncategorized_statements.pop();
         }
-        console.info('Loading entry:', entry);
+        log.info('Loading entry:', entry);
         return entry;
     }
 
@@ -201,7 +201,7 @@ class ProcessorMain {
         while (entry) {
             let categorizedEntry = await this.getStatementCategorization(entry);
             if (categorizedEntry == null || !categorizedEntry.mainCategory) {
-                console.info("No auto classification found for:", entry.description);
+                log.info("No auto classification found for:", entry.description);
                 failCount++;
                 entry = uncategorizedEntries.pop();
                 continue;
@@ -222,14 +222,14 @@ class ProcessorMain {
         let csv = json2CSVParser.parse(documents);
         let filePath = await this.getSavePath();
         if (!filePath) {
-            console.info("User canceled export.");
+            log.info("User canceled export.");
             return;
         }
         fs.writeFile(filePath, csv, (err) => {
             if (err) {
-                console.error("Failed to write CSV file:", err);
+                log.error("Failed to write CSV file:", err);
             }
-            console.log('Finished CSV export workflow');
+            log.log('Finished CSV export workflow');
         });
     }
 
@@ -270,7 +270,7 @@ class ProcessorMain {
             let source = categoryEntries[row]['source'];
             let category = categoryEntries[row]['mainCategory'];
             let subCategory = categoryEntries[row]['subCategory'];
-            console.info(subCategory);
+            log.info(subCategory);
 
             if (sourceCategoryMap.has(source)) {
                 let categoryMap = sourceCategoryMap.get(source);
@@ -280,7 +280,7 @@ class ProcessorMain {
                     categoryMap.set(category, subCategorySet);
                 } else {
                     let subCategorySet = new Set();
-                    subCategorySet.add(subCategory)
+                    subCategorySet.add(subCategory);
                     categoryMap.set(category, subCategorySet);
                 }
                 sourceCategoryMap.set(source, categoryMap);
@@ -292,7 +292,7 @@ class ProcessorMain {
                 sourceCategoryMap.set(source, categoryMap);
             }
         }
-        console.info(sourceCategoryMap);
+        log.info(sourceCategoryMap);
         event.returnValue = sourceCategoryMap;
     }
 }

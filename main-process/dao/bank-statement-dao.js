@@ -4,6 +4,9 @@ let { app } = require('electron');
 let constants = require('./config/constants');
 let schemas = require('./config/schemas');
 
+const log4js = require('log4js');
+let log = log4js.getLogger("app");
+
 
 RxDB.plugin(require(constants.DATABASE_PLUGIN_NAME));
 
@@ -46,21 +49,21 @@ class BankStatementsDAO {
     }
 
     async initDataBase() {
-        console.info('Initializing database');
+        log.info('Initializing database');
         this.db = await RxDB.create(this.DB_CONFIG);
-        console.info('Initialized database');
+        log.info('Initialized database');
     }
 
     async initStatementsCollection() {
-        console.info('Initializing bank statements collection');
+        log.info('Initializing bank statements collection');
         this.statementsCollection = await this.db.collection(this.COLLECTION_STATEMENTS_CONFIG);
-        console.info('Initialized bank statements collection');
+        log.info('Initialized bank statements collection');
     }
 
     async initCategoriesCollection() {
-        console.info('Initializing categorizations collection');
+        log.info('Initializing categorizations collection');
         this.categoriesCollection = await this.db.collection(this.COLLECTION_CATEGORIES_CONFIG);
-        console.info('Initialized categorizations collection');
+        log.info('Initialized categorizations collection');
     }
 
     /**
@@ -69,8 +72,8 @@ class BankStatementsDAO {
     async bulkInsertStatement(documents) {
         return this.statementsCollection
             .bulkInsert(documents)
-            .then(() => console.info('Successfully performed bulk insert of local bank statements'))
-            .catch(err => console.info(err));
+            .then(() => log.info('Successfully performed bulk insert of local bank statements'))
+            .catch(err => log.info(err));
     }
 
     /**
@@ -79,8 +82,8 @@ class BankStatementsDAO {
     async bulkInsertCategorizations(documents) {
         return this.categoriesCollection
             .bulkInsert(documents)
-            .then(() => console.info('Successfully performed bulk insert of categories'))
-            .catch(err => console.info(err));
+            .then(() => log.info('Successfully performed bulk insert of categories'))
+            .catch(err => log.info(err));
     }
 
     /**
@@ -88,24 +91,24 @@ class BankStatementsDAO {
      * */
     async insertCategorization(document) {
         if (!document.identifier) {
-            console.info('Category identifier is blank. No new identifier was added.');
+            log.info('Category identifier is blank. No new identifier was added.');
             return null;
         }
         return this.categoriesCollection
             .insert(document)
-            .then(() => console.info('Successfully saved new categorization identifier'))
-            .catch(err => console.info(err));
+            .then(() => log.info('Successfully saved new categorization identifier'))
+            .catch(err => log.info(err));
     }
 
     /**
      * Update temporary statement with categorization. TODO: Validate that this will only perform updates!
      * */
     async updateStatement(document) {
-        console.info("Updating document:", document);
+        log.info("Updating document:", document);
         return this.statementsCollection
             .upsert(document)
-            .then(() => console.info('Successfully saved confirmed categorized statement'))
-            .catch(err => console.info(err));
+            .then(() => log.info('Successfully saved confirmed categorized statement'))
+            .catch(err => log.info(err));
     }
 
     /**
@@ -118,7 +121,7 @@ class BankStatementsDAO {
             .equals(false)
             .exec();
 
-        console.info(`Found ${documents.length} uncategorized documents`);
+        log.info(`Found ${documents.length} uncategorized documents`);
         return this.convertToJson(documents);
     }
 
@@ -132,7 +135,7 @@ class BankStatementsDAO {
             .equals(true)
             .exec();
 
-        console.info(`Found ${documents.length} confirmed categorized documents`);
+        log.info(`Found ${documents.length} confirmed categorized documents`);
         return this.convertToJson(documents);
     }
 
@@ -151,36 +154,36 @@ class BankStatementsDAO {
         let categoryMatches = [];
         let rawDocuments = await this.categoriesCollection.find().exec();
         let documents = this.convertToJson(rawDocuments);
-        console.info("Entry Description:", entry.description);
+        log.info("Entry Description:", entry.description);
         for (let index = 0; index < documents.length; index++) {
             let categoryCandidate = documents[index];
             if (entry.description.toLowerCase().includes(categoryCandidate.identifier.toLowerCase())) {
-                console.info("Found matching identifier:", categoryCandidate.identifier);
+                log.info("Found matching identifier:", categoryCandidate.identifier);
                 categoryMatches.push(categoryCandidate);
             }
         }
-        console.info(`Found ${categoryMatches.length} category identifiers`);
+        log.info(`Found ${categoryMatches.length} category identifiers`);
         return categoryMatches;
     }
 
     /**
-     * Clear temporary collection with all recently loaded statements. TODO: Not complete.
+     * Clear temporary collection with all recently loaded statements.
      * */
     async removeBankStatementDocuments() {
         return this.statementsCollection
             .find()
             .remove()
-            .then((removedDocs) => console.info(`Removed ${removedDocs.length} bank statement documents.`));
+            .then((removedDocs) => log.info(`Removed ${removedDocs.length} bank statement documents.`));
     }
 
     /**
-     * Clear temporary collection with all recently loaded statements. TODO: Not complete.
+     * Clear temporary collection with all recently loaded statements.
      * */
     async removeCategoryDocuments() {
         return this.categoriesCollection
             .find()
             .remove()
-            .then((removedDocs) => console.info(`Removed ${removedDocs.length} category documents.`));
+            .then((removedDocs) => log.info(`Removed ${removedDocs.length} category documents.`));
     }
 
     /**

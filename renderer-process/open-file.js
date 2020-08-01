@@ -7,6 +7,9 @@ const viewElements = require("./constants/view-elements");
 
 const Navigation = require("../assets/scripts/navigation");
 
+const log4js = require('log4js');
+let log = log4js.getLogger("app");
+
 class OpenFileRenderer {
   selectDirBtn = document.getElementById(viewElements.BUTTON_LOAD_STATEMENT_FILE);
   confirmConfigBtn = document.getElementById('confirm-input-configuration');
@@ -25,10 +28,10 @@ class OpenFileRenderer {
   listenForOpenFileClick() {
     let channel = channels.REQUEST_SELECT_STATEMENT_FILE;
     this.selectDirBtn.addEventListener('click', () => {
-      console.info('Request sent on channel:', channel);
+      log.info('Request sent on channel:', channel);
       let success = ipcRenderer.sendSync(channels.REQUEST_DELETE_STATEMENTS);
       if (!success) {
-        console.info('Failed to clear current bank statements loaded in the application.');
+        log.info('Failed to clear current bank statements loaded in the application.');
       }
       ipcRenderer.send(channel);
     });
@@ -37,18 +40,18 @@ class OpenFileRenderer {
   listenOnOpenFileChannel() {
     let channel = channels.RESPONSE_SELECT_STATEMENT;
     ipcRenderer.on(channel, (event, path) => {
-      console.info('Response received on channel:', channel);
-      console.info(`Received path information: ${path}`);
+      log.info('Response received on channel:', channel);
+      log.info(`Received path information: ${path}`);
       document.getElementById('data-bank-statement-file').innerHTML = String(path);
     });
   }
 
   listenForLoadIdentifiersClick() {
     this.selectIdentifiersBtn.addEventListener('click', () => {
-      console.info(`Sending load identifiers file event from renderer process to main process`);
+      log.info(`Sending load identifiers file event from renderer process to main process`);
       let success = ipcRenderer.sendSync(channels.REQUEST_DELETE_CATEGORIZATIONS);
       if (!success) {
-        console.info('Failed to clear current identifiers loaded in the application.');
+        log.info('Failed to clear current identifiers loaded in the application.');
       }
       ipcRenderer.send(channels.REQUEST_SELECT_IDENTIFIERS_FILE);
     });
@@ -57,15 +60,15 @@ class OpenFileRenderer {
   listenOnLoadIdentifiersChannel() {
     let channel = channels.RESPONSE_LOAD_IDENTIFIERS;
     ipcRenderer.on(channel, (event, path) => {
-      console.info('Response received on channel:', channel);
-      console.info(`Received path information: ${path}`);
+      log.info('Response received on channel:', channel);
+      log.info(`Received path information: ${path}`);
       document.getElementById(viewElements.DATA_IDENTIFIERS_FILE).innerHTML = String(path);
     });
   }
 
   listenForConfigConfirmationClick() {
     this.confirmConfigBtn.addEventListener('click', () => {
-      console.info(`Confirmed Config`);
+      log.info(`Confirmed Config`);
       let bankStatementFile = document.getElementById(viewElements.DATA_BANK_STATEMENT_FILE).innerHTML;
       let identifiersFile = document.getElementById(viewElements.DATA_IDENTIFIERS_FILE).innerHTML;
       ipcRenderer.send(channels.REQUEST_LOAD_STATEMENT, bankStatementFile, this.getBankStatementLoadConfig());
