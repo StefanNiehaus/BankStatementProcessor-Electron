@@ -6,8 +6,7 @@ let channels = require("../constants/channels");
 const {constructCategoryIdentifierDocument} = require("./dto/translation-utils");
 let { getDao } = require("./dao/bank-statement-dao");
 
-const log4js = require('log4js');
-let log = log4js.getLogger("app");
+let log = require('electron-log');
 
 class ProcessorMain {
 

@@ -1,6 +1,8 @@
 const settings = require('electron-settings');
 const {ACTIVE_DEMO_BUTTON_ID} = require("../../constants/settings");
 
+let log = require('electron-log');
+
 class Buttons {
 
   buttons = document.querySelectorAll('.js-container-target');
@@ -13,9 +15,9 @@ class Buttons {
   }
 
   registerButton(btn) {
-    console.info('Registering button:', btn);
+    log.info('Registering button:', btn);
     btn.addEventListener('click', (event) => {
-      console.info('Click button:', event.target.getAttribute('id'));
+      log.info('Click button:', event.target.getAttribute('id'));
       event.target.parentElement.classList.toggle('is-open');
       if (event.target.parentElement.classList.contains('is-open')) {
         settings.set(ACTIVE_DEMO_BUTTON_ID, event.target.getAttribute('id'));

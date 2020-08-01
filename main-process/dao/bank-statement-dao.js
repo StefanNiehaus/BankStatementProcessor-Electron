@@ -4,8 +4,7 @@ let { app } = require('electron');
 let constants = require('./config/constants');
 let schemas = require('./config/schemas');
 
-const log4js = require('log4js');
-let log = log4js.getLogger("app");
+let log = require('electron-log');
 
 
 RxDB.plugin(require(constants.DATABASE_PLUGIN_NAME));
@@ -16,11 +15,9 @@ class BankStatementsDAO {
     /**
      * Configuration for database
      */
-    DB_DIRECTORY = 'appData';
     DB_CONFIG = {
         name: constants.DATABASE_NAME,
-        adapter: constants.ADAPTOR,
-        path: `${app.getPath(this.DB_DIRECTORY)}/${app.name}`
+        adapter: constants.ADAPTOR
     };
 
     /**
@@ -29,12 +26,10 @@ class BankStatementsDAO {
     COLLECTION_STATEMENTS_CONFIG = {
         name: constants.COLLECTION_STATEMENTS_UNCONFIRMED,
         schema: schemas.bankStatementSchema,
-        path: `${app.getPath(this.DB_DIRECTORY)}/${app.name}`
     };
     COLLECTION_CATEGORIES_CONFIG = {
         name: constants.COLLECTION_CATEGORIZATION,
         schema: schemas.categorizationsSchema,
-        path: `${app.getPath(this.DB_DIRECTORY)}/${app.name}`
     };
 
     /**

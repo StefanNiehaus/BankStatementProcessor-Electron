@@ -2,6 +2,8 @@ const settings = require('electron-settings');
 const Buttons = require('./btns');
 const {ACTIVE_SECTION_ID} = require("../../constants/settings");
 
+let log = require('electron-log');
+
 class Navigation {
 
   buttons = new Buttons();
@@ -13,11 +15,11 @@ class Navigation {
     // Default to the view that was active the last time the app was open
     const sectionId = settings.get(ACTIVE_SECTION_ID);
     if (sectionId) {
-      console.info(`Loading section: ${sectionId}`);
+      log.info(`Loading section: ${sectionId}`);
       this.showMainContent();
       this.loadSection(sectionId);
     } else {
-      console.info(`Loading default section`);
+      log.info(`Loading default section`);
       this.activateDefaultSection();
       this.displayAbout();
     }
@@ -36,7 +38,7 @@ class Navigation {
 
   handleSectionTrigger (event) {
     const sectionId = `${event.target.dataset.section}-section`;
-    console.info(`Opening section: ${sectionId}`);
+    log.info(`Opening section: ${sectionId}`);
 
     this.loadSection(sectionId);
 
@@ -45,7 +47,7 @@ class Navigation {
   }
 
   handleModalTrigger (event) {
-    console.log(`Opening modal: ${event.target.dataset.modal}`);
+    log.log(`Opening modal: ${event.target.dataset.modal}`);
     this.hideAllModals();
     this.showMainContent();
 
@@ -92,12 +94,12 @@ class Navigation {
     this.hideAllSections();
     this.deselectButtons();
 
-    console.info('Loading section:', sectionId);
+    log.info('Loading section:', sectionId);
     document.getElementById(sectionId).classList.add('is-shown');
 
     // Save currently active section in localStorage
     settings.set(ACTIVE_SECTION_ID, sectionId);
-    console.info('Saved section:', sectionId);
+    log.info('Saved section:', sectionId);
   }
 }
 

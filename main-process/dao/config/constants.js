@@ -1,8 +1,8 @@
 
 // Database constants
 const DATABASE_NAME = 'bank_statements_db';
-const DATABASE_PLUGIN_NAME = 'pouchdb-adapter-leveldb';
-const ADAPTOR = require('leveldown');
+const DATABASE_PLUGIN_NAME = 'pouchdb-adapter-memory';
+const ADAPTOR = 'memory';
 
 // Collection constants
 const COLLECTION_STATEMENTS_UNCONFIRMED = 'statements_collection';

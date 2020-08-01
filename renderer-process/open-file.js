@@ -7,8 +7,7 @@ const viewElements = require("./constants/view-elements");
 
 const Navigation = require("../assets/scripts/navigation");
 
-const log4js = require('log4js');
-let log = log4js.getLogger("app");
+let log = require('electron-log');
 
 class OpenFileRenderer {
   selectDirBtn = document.getElementById(viewElements.BUTTON_LOAD_STATEMENT_FILE);

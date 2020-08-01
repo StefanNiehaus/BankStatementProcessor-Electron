@@ -1,9 +1,9 @@
 const {ipcRenderer} = require("electron");
-const log4js = require('log4js');
 
 const channels = require("../constants/channels");
 const viewElements = require("./constants/view-elements");
-let log = log4js.getLogger("app");
+
+let log = require('electron-log');
 
 class ProcessorRenderer {
   buttonStartAutoCategorization = document.getElementById(viewElements.BUTTON_START_AUTO_CATEGORIZATION);

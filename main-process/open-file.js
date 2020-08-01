@@ -8,8 +8,7 @@ const {getDao} = require("./dao/bank-statement-dao");
 const {constructIdentifierDocument, constructDocument, formatStatement} = require('./dto/translation-utils');
 const {readCSV} = require('./utils/csv-reader');
 
-const log4js = require('log4js');
-let log = log4js.getLogger("app");
+let log = require('electron-log');
 
 class OpenFileMain {
   WINDOW_OPTIONS = {
@@ -28,7 +27,9 @@ class OpenFileMain {
   }
 
   listenOnSelectBankStatementFileChannel() {
-    ipcMain.on(channels.REQUEST_SELECT_STATEMENT_FILE, (event) => {
+    let channel = channels.REQUEST_SELECT_STATEMENT_FILE;
+    ipcMain.on(channel, (event) => {
+      log.info('Request received on channel:', channel);
       dialog.showOpenDialog(this.WINDOW_OPTIONS).then(response =>
           this.sendFileNameToRenderProcess(event, response, channels.RESPONSE_SELECT_STATEMENT));
     });
