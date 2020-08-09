@@ -335,7 +335,7 @@ class ProcessorMain {
                 if (typeMap.has(type)) {
                     let categoryMap = typeMap.get(type);
                     if (categoryMap.has(category)) {
-                        let subCategorySet = category.get(category);
+                        let subCategorySet = categoryMap.get(category);
                         subCategorySet.add(subCategorySet);
                         categoryMap.set(category, subCategorySet);
                     } else {
