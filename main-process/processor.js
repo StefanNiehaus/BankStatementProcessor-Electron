@@ -1,6 +1,6 @@
 let  { ipcMain, dialog } = require("electron");
-const fs = require('fs');
-const { Parser } = require('json2csv');
+const { createWriteStream } = require('fs');
+const { parseAsync } = require('json2csv');
 
 let channels = require("../constants/channels");
 const {constructCategoryIdentifierDocument} = require("./dto/translation-utils");
@@ -111,7 +111,8 @@ class ProcessorMain {
             let documents = await this.bankStatementDAO.getCategorizedStatements();
             let formattedDocuments = this.formatConfirmedDocuments(documents);
             if (formattedDocuments != null && formattedDocuments.length > 0) {
-                await this.exportToCSV(formattedDocuments);
+                let header = this.getStatementsHeader();
+                await this.exportToCSV(formattedDocuments, header);
             } else {
                 let options = {
                     type: 'info',
@@ -134,7 +135,17 @@ class ProcessorMain {
             let documents = await this.bankStatementDAO.getIdentifiers();
             let formattedDocuments = this.formatConfirmedDocuments(documents);
             if (formattedDocuments != null && formattedDocuments.length > 0) {
-                await this.exportToCSV(formattedDocuments);
+                let header = this.getIdentifiersHeader();
+                await this.exportToCSV(formattedDocuments, header);
+            } else {
+                let options = {
+                    type: 'info',
+                    title: 'Information',
+                    message: `There is nothing to export.`,
+                    buttons: ['Okay']
+                };
+                await dialog.showMessageBox(options);
+                event.sender.send(channels.RESPONSE_EXPORT_IDENTIFIERS, false);
             }
         } catch (err) {
             log.error("Failed to export identifiers to CSV:", err);
@@ -154,6 +165,7 @@ class ProcessorMain {
             let category = categories[index];
             let entryCopy = await JSON.parse(JSON.stringify(entry));
             entryCopy.source = category.source;
+            entryCopy.type = category.type;
             entryCopy.mainCategory = category.mainCategory;
             entryCopy.subCategory = category.subCategory;
             entryCopy.explanation = category.explanation;
@@ -168,9 +180,9 @@ class ProcessorMain {
     }
 
     formatConfirmedDocuments(documents) {
+        log.info("Inspecting document:", documents);
         for (let index = 0; index < documents.length; index++) {
             let document = documents[index];
-            log.info("Inspecting document:", documents);
             delete document._id;
             delete document._rev;
         }
@@ -215,21 +227,23 @@ class ProcessorMain {
         }
     }
 
-    async exportToCSV(documents) {
-        let header = this.getHeader();
-        let json2CSVParser = this.getCSVParser(header);
-        let csv = json2CSVParser.parse(documents);
+    async exportToCSV(documents, header) {
+        // output setup
         let filePath = await this.getSavePath();
         if (!filePath) {
             log.info("User canceled export.");
             return;
         }
-        fs.writeFile(filePath, csv, (err) => {
-            if (err) {
-                log.error("Failed to write CSV file:", err);
-            }
-            log.log('Finished CSV export workflow');
-        });
+        const output = createWriteStream(filePath, { encoding: 'utf8' });
+
+        // csv parser setup
+        let opts = { header };
+
+        parseAsync(documents, opts)
+            .then(csv => output.write(csv))
+            .finally(() => log.info('Finished CSV export workflow'))
+            .catch(err =>  log.error("Failed to write CSV file:", err));
+
     }
 
     async getSavePath() {
@@ -243,18 +257,61 @@ class ProcessorMain {
         return saveDialogReturnValue.filePath;
     }
 
-    getCSVParser(header) {
-        return new Parser({ header });
+    getStatementsHeader() {
+        return [{
+            label: 'amount',
+            value: 'amount'
+
+        }, {
+            label: 'date',
+            value: 'transactionDate'
+        }, {
+            label: 'description',
+            value: 'description'
+        }, {
+            label: 'balance',
+            value: 'balance'
+        }, {
+            label: 'source',
+            value: 'source'
+        }, {
+            label: 'main category',
+            value: 'mainCategory'
+        }, {
+            label: 'sub category',
+            value: 'subCategory'
+        }, {
+            label: 'explanation',
+            value: 'explanation'
+        }
+        ];
     }
 
-    getHeader() {
-        return ['transactionDate', 'description', 'amount', 'balance', 'source', 'mainCategory', 'subCategory', 'explanation'];
+    getIdentifiersHeader() {
+        return [
+            {
+                label: 'source',
+                value: 'source'
+            },
+            {
+                label: 'main category',
+                value: 'mainCategory'
+            },
+            {
+                label: 'sub category',
+                value: 'subCategory'
+            },
+            {
+                label: 'identifier',
+                value: 'identifier'
+            }];
     }
 
     async sendCategoriesMap(event) {
         let categoryEntries = await this.bankStatementDAO.getIdentifiers();
 
         let source = categoryEntries[0]['source'];
+        let type = categoryEntries[0]['type'];
         let category = categoryEntries[0]['mainCategory'];
         let subCategory = categoryEntries[0]['subCategory'];
 
@@ -262,33 +319,48 @@ class ProcessorMain {
         subCategorySet.add(subCategory);
         let mainCategoryMap = new Map();
         mainCategoryMap.set(category, subCategorySet);
+        let typeCategoryMap = new Map();
+        typeCategoryMap.set(type, mainCategoryMap);
         let sourceCategoryMap = new Map();
-        sourceCategoryMap.set(source, mainCategoryMap);
+        sourceCategoryMap.set(source, typeCategoryMap);
 
         for (let row = 1; row < categoryEntries.length; row++) {
             let source = categoryEntries[row]['source'];
+            let type = categoryEntries[row]['type'];
             let category = categoryEntries[row]['mainCategory'];
             let subCategory = categoryEntries[row]['subCategory'];
-            log.info(subCategory);
 
             if (sourceCategoryMap.has(source)) {
-                let categoryMap = sourceCategoryMap.get(source);
-                if (categoryMap.has(category)) {
-                    let subCategorySet = categoryMap.get(category);
-                    subCategorySet.add(subCategory);
-                    categoryMap.set(category, subCategorySet);
+                let typeMap = sourceCategoryMap.get(source);
+                if (typeMap.has(type)) {
+                    let categoryMap = typeMap.get(type);
+                    if (categoryMap.has(category)) {
+                        let subCategorySet = category.get(category);
+                        subCategorySet.add(subCategorySet);
+                        categoryMap.set(category, subCategorySet);
+                    } else {
+                        let subCategorySet = new Set();
+                        subCategorySet.add(subCategory);
+                        categoryMap.set(category, subCategorySet);
+                    }
+                    typeMap.set(type, categoryMap);
                 } else {
                     let subCategorySet = new Set();
                     subCategorySet.add(subCategory);
+                    let categoryMap = new Map();
                     categoryMap.set(category, subCategorySet);
+                    let typeMap = new Map();
+                    typeMap.set(type, categoryMap);
                 }
-                sourceCategoryMap.set(source, categoryMap);
+                sourceCategoryMap.set(source, typeMap);
             } else {
                 let subCategorySet = new Set();
                 subCategorySet.add(subCategory);
                 let categoryMap = new Map();
                 categoryMap.set(category, subCategorySet);
-                sourceCategoryMap.set(source, categoryMap);
+                let typeMap = new Map();
+                typeMap.set(type, categoryMap);
+                sourceCategoryMap.set(source, typeMap);
             }
         }
         log.info(sourceCategoryMap);

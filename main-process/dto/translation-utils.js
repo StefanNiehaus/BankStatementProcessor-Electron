@@ -14,6 +14,7 @@ function formatStatement(originalStatement) {
 function constructIdentifierDocument(data, config) {
     return {
         source: data[config.sourceIndex],
+        type: data[config.typeIndex],
         mainCategory: data[config.categoryIndex],
         subCategory: data[config.subCategoryIndex],
         identifier: data[config.identifierIndex]
@@ -28,6 +29,7 @@ function constructDocument(statement) {
         balance: parseFloat(statement[settings.get(settingKeys.COLUMN_BALANCE)]),
         categorized: false,
         source: null,
+        type: null,
         mainCategory: null,
         subCategory: null,
         explanation: null,
@@ -38,6 +40,7 @@ function constructDocument(statement) {
 function constructCategoryIdentifierDocument(statement) {
     return {
         source: statement.source,
+        type: statement.type,
         mainCategory: statement.mainCategory,
         subCategory: statement.subCategory,
         identifier: statement.identifier

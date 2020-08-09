@@ -13,6 +13,7 @@ class ProcessorRenderer {
   buttonExportIdentifiers = document.getElementById(viewElements.BUTTON_EXPORT_IDENTIFIERS);
 
   labelSourceStatement = document.getElementById(viewElements.LABEL_SOURCE_STATEMENT);
+  labelTypeStatement = document.getElementById(viewElements.LABEL_TYPE_STATEMENT);
   labelCategoryStatement = document.getElementById(viewElements.LABEL_CATEGORY_STATEMENT);
 
   start() {
@@ -30,6 +31,7 @@ class ProcessorRenderer {
     this.listenForExportClassificationsClick();
     this.listenForExportIdentifiersClick();
     this.listenForLabelSourceChange();
+    this.listenForLabelTypeChange();
     this.listenForLabelMainCategoryChange();
 
     this.statement = null;
@@ -125,6 +127,11 @@ class ProcessorRenderer {
     let channel = channels.RESPONSE_EXPORT_CLASSIFICATIONS;
     ipcRenderer.on(channel, (event, success) => {
       log.info('Response received on channel:', channel);
+      if (!success) {
+        log.warn('Failed to export all statements.');
+        return;
+      }
+      log.info('Successfully exported all statements.');
     })
   }
 
@@ -143,13 +150,41 @@ class ProcessorRenderer {
       log.info('New source value:', newSource);
 
       if (!newSource || !this.categoriesMap.has(newSource)) {
+        document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value = null;
         document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = null;
         document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
         return;
       }
 
-      let categories = Array.from(this.categoriesMap.get(newSource).keys());
-      log.info('Categories:', newSource);
+      let types = Array.from(this.categoriesMap.get(newSource).keys());
+      log.info('Available types:', types);
+      document.getElementById(viewElements.DATA_STATEMENT_TYPE_LIST).innerHTML = this.createOptionList(types);
+    })
+  }
+
+  listenForLabelTypeChange() {
+    this.labelTypeStatement.addEventListener('change', () => {
+      log.info('Request received on type label change');
+      let newType = document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value;
+      log.info('New type value:', newType);
+
+      let currentSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
+
+      // this should always be false but added here for user experience in case something is wrong
+      if (!this.categoriesMap.has(currentSource)) {
+        log.error("Issue with categories map. Cannot find source:", currentSource);
+        return;
+      }
+
+      let typeMap = this.categoriesMap.get(currentSource);
+      if (!newType || !typeMap.has(newType)) {
+        document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = null;
+        document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
+        return;
+      }
+
+      let categories = Array.from(typeMap.get(newType).keys());
+      log.info('Available categories:', categories);
       document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_LIST).innerHTML = this.createOptionList(categories);
     })
   }
@@ -161,13 +196,15 @@ class ProcessorRenderer {
       log.info('New category value:', newCategory);
 
       let currentSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
+      let currentType = document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value;
 
       // this should always be false but added here for user experience in case something is wrong
-      if (!this.categoriesMap.has(currentSource)) {
+      if (!this.categoriesMap.has(currentSource) || !this.categoriesMap.get(currentSource).has(currentType)) {
+        log.error("Issue with categories map. Cannot find source and type:", currentSource, currentType);
         return;
       }
 
-      let categoryMap = this.categoriesMap.get(currentSource);
+      let categoryMap = this.categoriesMap.get(currentSource).get(currentType);
       if (!newCategory || !categoryMap.has(newCategory)) {
         document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
         return;
@@ -176,9 +213,8 @@ class ProcessorRenderer {
       let subCategories = [];
       categoryMap.get(newCategory).forEach(item => subCategories.push(item));
 
-      log.info('Sub categories:', subCategories);
+      log.info('Available sub categories:', subCategories);
       document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_LIST).innerHTML = this.createOptionList(subCategories);
-
     })
   }
 
@@ -187,7 +223,7 @@ class ProcessorRenderer {
     ipcRenderer.on(channel, (event, success) => {
       log.info('Response received on channel:', channel);
       if (!success) {
-        log.error('Failed to export all identifiers.');
+        log.warn('Failed to export all identifiers.');
         return;
       }
       log.info('Successfully exported all identifiers.');
@@ -203,6 +239,7 @@ class ProcessorRenderer {
 
   validDisplayedCategorizationDetails(categorizationDetails) {
     return (categorizationDetails.source &&
+        categorizationDetails.type &&
         categorizationDetails.mainCategory &&
         categorizationDetails.subCategory);
   }
@@ -218,6 +255,7 @@ class ProcessorRenderer {
     categorizationDetails.categorized = true;
 
     categorizationDetails.source = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
+    categorizationDetails.type = document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value;
     categorizationDetails.mainCategory = document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value;
     categorizationDetails.subCategory = document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value;
     categorizationDetails.explanation = document.getElementById(viewElements.DATA_STATEMENT_EXPLANATION_INPUT).value;
@@ -228,6 +266,7 @@ class ProcessorRenderer {
 
   clearCategorizationDetails() {
     document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value = null;
+    document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value = null;
     document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = null;
     document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
     document.getElementById(viewElements.DATA_STATEMENT_EXPLANATION_INPUT).value = null;
@@ -245,6 +284,7 @@ class ProcessorRenderer {
     document.getElementById(viewElements.DATA_STATEMENT_BALANCE).innerHTML = statement.balance;
 
     document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value = statement.source;
+    document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value = statement.source;
     document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = statement.mainCategory;
     document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = statement.subCategory;
   }

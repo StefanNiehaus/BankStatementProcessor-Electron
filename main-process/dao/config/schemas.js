@@ -25,6 +25,9 @@ const bankStatementSchema = {
         source: {
             type: ['string', 'null']
         },
+        type: {
+            type: ['string', 'null']
+        },
         mainCategory: {
             type: ['string', 'null']
         },
@@ -50,6 +53,9 @@ const categorizationsSchema = {
         source: {
             type: 'string'
         },
+        type: {
+            type: 'string'
+        },
         mainCategory: {
             type: 'string'
         },
@@ -60,7 +66,7 @@ const categorizationsSchema = {
             type: 'string'
         }
     },
-    required: ['source', 'mainCategory', 'subCategory', 'identifier']
+    required: ['source', 'type', 'mainCategory', 'subCategory', 'identifier']
 };
 
 module.exports = {

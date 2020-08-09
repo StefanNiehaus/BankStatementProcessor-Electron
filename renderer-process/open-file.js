@@ -29,8 +29,10 @@ class OpenFileRenderer {
     this.selectDirBtn.addEventListener('click', () => {
       log.info('Request sent on channel:', channel);
       let success = ipcRenderer.sendSync(channels.REQUEST_DELETE_STATEMENTS);
+      document.getElementById(viewElements.DATA_BANK_STATEMENT_FILE).innerHTML = null;
       if (!success) {
-        log.info('Failed to clear current bank statements loaded in the application.');
+        log.error('Failed to clear current bank statements loaded in the application.');
+        return;
       }
       ipcRenderer.send(channel);
     });
@@ -41,7 +43,7 @@ class OpenFileRenderer {
     ipcRenderer.on(channel, (event, path) => {
       log.info('Response received on channel:', channel);
       log.info(`Received path information: ${path}`);
-      document.getElementById('data-bank-statement-file').innerHTML = String(path);
+      document.getElementById(viewElements.DATA_BANK_STATEMENT_FILE).innerHTML = String(path);
     });
   }
 
@@ -49,8 +51,10 @@ class OpenFileRenderer {
     this.selectIdentifiersBtn.addEventListener('click', () => {
       log.info(`Sending load identifiers file event from renderer process to main process`);
       let success = ipcRenderer.sendSync(channels.REQUEST_DELETE_CATEGORIZATIONS);
+      document.getElementById(viewElements.DATA_IDENTIFIERS_FILE).innerHTML = null;
       if (!success) {
-        log.info('Failed to clear current identifiers loaded in the application.');
+        log.error('Failed to clear current identifiers loaded in the application.');
+        return;
       }
       ipcRenderer.send(channels.REQUEST_SELECT_IDENTIFIERS_FILE);
     });
@@ -111,9 +115,10 @@ class OpenFileRenderer {
     return {
       startRowIndex: 1,
       sourceIndex: 0,
-      categoryIndex: 1,
-      subCategoryIndex: 2,
-      identifierIndex: 3
+      typeIndex: 1,
+      categoryIndex: 2,
+      subCategoryIndex: 3,
+      identifierIndex: 4
     };
   }
 

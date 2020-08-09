@@ -8,6 +8,7 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make win": "electron-forge make --arch=\"x64\" --platform=\"win32\"",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
@@ -23,9 +24,7 @@
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "bank_statement_processor"
-          }
+          "config": {}
         },
         {
           "name": "@electron-forge/maker-zip",
