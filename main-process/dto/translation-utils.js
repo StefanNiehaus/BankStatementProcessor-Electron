@@ -1,6 +1,4 @@
 const moment = require('moment');
-const settings = require('electron-settings');
-const settingKeys = require('../../constants/settings');
 
 const ORIGINAL_DATE_FORMATS = ['YYYY/MM/DD'];
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -38,7 +36,6 @@ function constructDocument(statement, config) {
 
 function constructCategoryIdentifierDocument(statement) {
     return {
-        source: statement.source,
         type: statement.type,
         mainCategory: statement.mainCategory,
         subCategory: statement.subCategory,

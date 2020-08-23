@@ -10,9 +10,6 @@ let log = require('electron-log');
 
 class ProcessorMain {
 
-    _loaded_statements = false;
-    _uncategorized_statements = [];
-
     start() {
         this.bankStatementDAO = getDao();
         this.listOnStartAutoCategorizationChannel();
@@ -164,7 +161,6 @@ class ProcessorMain {
         for (let index = 0; index < categories.length; index++) {
             let category = categories[index];
             let entryCopy = await JSON.parse(JSON.stringify(entry));
-            entryCopy.source = category.source;
             entryCopy.type = category.type;
             entryCopy.mainCategory = category.mainCategory;
             entryCopy.subCategory = category.subCategory;
@@ -185,20 +181,13 @@ class ProcessorMain {
             let document = documents[index];
             delete document._id;
             delete document._rev;
+            delete documents.categorized;
         }
         return documents;
     }
 
     async getStatementEntry() {
-        let entry = null;
-        if (this._uncategorized_statements.length === 0 || !this._loaded_statements) {
-            this._uncategorized_statements = await this.bankStatementDAO.getUncategorizedStatements();
-            this._loaded_statements = true;
-        }
-        if (this._uncategorized_statements.length > 0) {
-            log.info("Entries exist!");
-            entry = this._uncategorized_statements.pop();
-        }
+        let entry = await this.bankStatementDAO.getUncategorizedStatement();
         log.info('Loading entry:', entry);
         return entry;
     }

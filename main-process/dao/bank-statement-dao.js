@@ -1,5 +1,4 @@
 let RxDB = require('rxdb');
-let { app } = require('electron');
 
 let constants = require('./config/constants');
 let schemas = require('./config/schemas');
@@ -118,6 +117,21 @@ class BankStatementsDAO {
 
         log.info(`Found ${documents.length} uncategorized documents`);
         return this.convertToJson(documents);
+    }
+
+    /**
+     * Retrieve a statements without a categorization.
+     * */
+    async getUncategorizedStatement() {
+        let document = await this.statementsCollection
+            .findOne()
+            .where('categorized')
+            .equals(false)
+            .exec();
+
+        let jsonDoc = document.toJSON();
+        log.info('Found uncategorized document:', jsonDoc);
+        return jsonDoc;
     }
 
     /**

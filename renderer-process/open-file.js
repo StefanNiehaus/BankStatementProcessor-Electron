@@ -72,8 +72,14 @@ class OpenFileRenderer {
   listenForConfigConfirmationClick() {
     this.confirmConfigBtn.addEventListener('click', () => {
       log.info(`Confirmed Config`);
-      ipcRenderer.send(channels.REQUEST_LOAD_STATEMENT, this.getBankStatementLoadConfig());
-      ipcRenderer.send(channels.REQUEST_LOAD_IDENTIFIERS, this.getIdentifierFileLoadConfig());
+      let bankStatementConfig = this.getBankStatementLoadConfig();
+      let identifierFileLoadConfig = this.getIdentifierFileLoadConfig();
+      if (!this.validConfiguration(bankStatementConfig, identifierFileLoadConfig)) {
+        log.warn("User input configuration is not complete.");
+        return;
+      }
+      ipcRenderer.send(channels.REQUEST_LOAD_STATEMENT, bankStatementConfig);
+      ipcRenderer.send(channels.REQUEST_LOAD_IDENTIFIERS, identifierFileLoadConfig);
       this.navigation.loadSection(viewElements.SECTION_PROCESSOR);
     });
   }
@@ -132,6 +138,12 @@ class OpenFileRenderer {
     settings.get(settingKeys.COLUMN_DESCRIPTION);
     settings.get(settingKeys.COLUMN_AMOUNT);
     settings.get(settingKeys.COLUMN_BALANCE);
+  }
+
+  validConfiguration(bankStatementConfig, identifierFileLoadConfig) {
+    return (bankStatementConfig.source
+        && bankStatementConfig.filePath
+        && identifierFileLoadConfig.filePath);
   }
 }
 
