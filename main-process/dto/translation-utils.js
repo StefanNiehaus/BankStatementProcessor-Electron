@@ -5,15 +5,14 @@ const settingKeys = require('../../constants/settings');
 const ORIGINAL_DATE_FORMATS = ['YYYY/MM/DD'];
 const DATE_FORMAT = 'YYYY-MM-DD';
 
-function formatStatement(originalStatement) {
-    let date = moment(originalStatement[settings.get(settingKeys.COLUMN_TRANSACTION_DATE)], ORIGINAL_DATE_FORMATS);
-    originalStatement[settings.get(settingKeys.COLUMN_TRANSACTION_DATE)] = date.format(DATE_FORMAT);
+function formatStatement(originalStatement, config) {
+    let date = moment(originalStatement[config.columnDateIndex], ORIGINAL_DATE_FORMATS);
+    originalStatement[config.columnDateIndex] = date.format(DATE_FORMAT);
     return originalStatement;
 }
 
 function constructIdentifierDocument(data, config) {
     return {
-        source: data[config.sourceIndex],
         type: data[config.typeIndex],
         mainCategory: data[config.categoryIndex],
         subCategory: data[config.subCategoryIndex],
@@ -21,14 +20,14 @@ function constructIdentifierDocument(data, config) {
     }
 }
 
-function constructDocument(statement) {
+function constructDocument(statement, config) {
     return {
-        transactionDate: statement[settings.get(settingKeys.COLUMN_TRANSACTION_DATE)],
-        description: statement[settings.get(settingKeys.COLUMN_DESCRIPTION)],
-        amount: parseFloat(statement[settings.get(settingKeys.COLUMN_AMOUNT)]),
-        balance: parseFloat(statement[settings.get(settingKeys.COLUMN_BALANCE)]),
+        transactionDate: statement[config.columnDateIndex],
+        description: statement[config.columnDescriptionIndex],
+        amount: parseFloat(statement[config.columnAmountIndex]),
+        balance: parseFloat(statement[config.columnBalanceIndex]),
         categorized: false,
-        source: null,
+        source: config.source,
         type: null,
         mainCategory: null,
         subCategory: null,

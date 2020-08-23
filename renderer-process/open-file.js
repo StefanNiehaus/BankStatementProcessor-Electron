@@ -11,8 +11,8 @@ let log = require('electron-log');
 
 class OpenFileRenderer {
   selectDirBtn = document.getElementById(viewElements.BUTTON_LOAD_STATEMENT_FILE);
-  confirmConfigBtn = document.getElementById('confirm-input-configuration');
   selectIdentifiersBtn = document.getElementById(viewElements.BUTTON_LOAD_IDENTIFIERS);
+  confirmConfigBtn = document.getElementById(viewElements.BUTTON_CONFIRM_CONFIGURATION);
   navigation = new Navigation();
 
   start() {
@@ -72,10 +72,8 @@ class OpenFileRenderer {
   listenForConfigConfirmationClick() {
     this.confirmConfigBtn.addEventListener('click', () => {
       log.info(`Confirmed Config`);
-      let bankStatementFile = document.getElementById(viewElements.DATA_BANK_STATEMENT_FILE).innerHTML;
-      let identifiersFile = document.getElementById(viewElements.DATA_IDENTIFIERS_FILE).innerHTML;
-      ipcRenderer.send(channels.REQUEST_LOAD_STATEMENT, bankStatementFile, this.getBankStatementLoadConfig());
-      ipcRenderer.send(channels.REQUEST_LOAD_IDENTIFIERS, identifiersFile, this.getIdentifierFileLoadConfig());
+      ipcRenderer.send(channels.REQUEST_LOAD_STATEMENT, this.getBankStatementLoadConfig());
+      ipcRenderer.send(channels.REQUEST_LOAD_IDENTIFIERS, this.getIdentifierFileLoadConfig());
       this.navigation.loadSection(viewElements.SECTION_PROCESSOR);
     });
   }
@@ -84,12 +82,16 @@ class OpenFileRenderer {
    * User defines the load config for the bank statement. The user settings are persisted to ease the configuration.
   * */
   getBankStatementLoadConfig() {
+    let bankStatementSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
+    let bankStatementFile = document.getElementById(viewElements.DATA_BANK_STATEMENT_FILE).innerHTML;
     let r_start = document.getElementById('row-start');
     let c_transaction_date = document.getElementById('column-transaction-date');
     let c_description = document.getElementById('column-description');
     let c_amount = document.getElementById('column-amount');
     let c_balance = document.getElementById('column-balance');
     let config = {
+      source: String(bankStatementSource),
+      filePath: String(bankStatementFile),
       startRowIndex: parseInt(r_start.options[r_start.selectedIndex].text) - 1,
       columnDateIndex: parseInt(c_transaction_date.options[c_transaction_date.selectedIndex].text) - 1,
       columnDescriptionIndex: parseInt(c_description.options[c_description.selectedIndex].text) - 1,
@@ -112,13 +114,14 @@ class OpenFileRenderer {
    * User defines the load config for the identifiers file. The user settings are persisted to ease the configuration.
    * */
   getIdentifierFileLoadConfig() {
+    let identifiersFile = document.getElementById(viewElements.DATA_IDENTIFIERS_FILE).innerHTML;
     return {
+      filePath: String(identifiersFile),
       startRowIndex: 1,
-      sourceIndex: 0,
-      typeIndex: 1,
-      categoryIndex: 2,
-      subCategoryIndex: 3,
-      identifierIndex: 4
+      typeIndex: 0,
+      categoryIndex: 1,
+      subCategoryIndex: 2,
+      identifierIndex: 3
     };
   }
 

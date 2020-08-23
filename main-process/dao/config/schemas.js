@@ -50,9 +50,6 @@ const categorizationsSchema = {
     description: 'Describes a simple bank statement',
     type: 'object',
     properties: {
-        source: {
-            type: 'string'
-        },
         type: {
             type: 'string'
         },
@@ -66,7 +63,7 @@ const categorizationsSchema = {
             type: 'string'
         }
     },
-    required: ['source', 'type', 'mainCategory', 'subCategory', 'identifier']
+    required: ['type', 'mainCategory', 'subCategory', 'identifier']
 };
 
 module.exports = {

@@ -12,7 +12,6 @@ class ProcessorRenderer {
   buttonExportBankStatements = document.getElementById(viewElements.BUTTON_EXPORT_BANK_STATEMENTS);
   buttonExportIdentifiers = document.getElementById(viewElements.BUTTON_EXPORT_IDENTIFIERS);
 
-  labelSourceStatement = document.getElementById(viewElements.LABEL_SOURCE_STATEMENT);
   labelTypeStatement = document.getElementById(viewElements.LABEL_TYPE_STATEMENT);
   labelCategoryStatement = document.getElementById(viewElements.LABEL_CATEGORY_STATEMENT);
 
@@ -30,7 +29,6 @@ class ProcessorRenderer {
     this.listenForConfirmEntryClassificationClick();
     this.listenForExportClassificationsClick();
     this.listenForExportIdentifiersClick();
-    this.listenForLabelSourceChange();
     this.listenForLabelTypeChange();
     this.listenForLabelMainCategoryChange();
 
@@ -82,8 +80,9 @@ class ProcessorRenderer {
 
       this.categoriesMap = ipcRenderer.sendSync(channels.REQUEST_SAVED_CATEGORIZATIONS);
 
-      let sources = Array.from(this.categoriesMap.keys());
-      document.getElementById(viewElements.DATA_STATEMENT_SOURCE_LIST).innerHTML = this.createOptionList(sources);
+      let types = Array.from(this.categoriesMap.keys());
+      log.info('Available types:', types);
+      document.getElementById(viewElements.DATA_STATEMENT_TYPE_LIST).innerHTML = this.createOptionList(types);
     })
   }
 
@@ -143,47 +142,19 @@ class ProcessorRenderer {
     })
   }
 
-  listenForLabelSourceChange() {
-    this.labelSourceStatement.addEventListener('change', () => {
-      log.info('Request received on source label change');
-      let newSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
-      log.info('New source value:', newSource);
-
-      if (!newSource || !this.categoriesMap.has(newSource)) {
-        document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value = null;
-        document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = null;
-        document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
-        return;
-      }
-
-      let types = Array.from(this.categoriesMap.get(newSource).keys());
-      log.info('Available types:', types);
-      document.getElementById(viewElements.DATA_STATEMENT_TYPE_LIST).innerHTML = this.createOptionList(types);
-    })
-  }
-
   listenForLabelTypeChange() {
     this.labelTypeStatement.addEventListener('change', () => {
       log.info('Request received on type label change');
       let newType = document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value;
       log.info('New type value:', newType);
 
-      let currentSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
-
-      // this should always be false but added here for user experience in case something is wrong
-      if (!this.categoriesMap.has(currentSource)) {
-        log.error("Issue with categories map. Cannot find source:", currentSource);
-        return;
-      }
-
-      let typeMap = this.categoriesMap.get(currentSource);
-      if (!newType || !typeMap.has(newType)) {
+      if (!newType || !this.categoriesMap.has(newType)) {
         document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = null;
         document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
         return;
       }
 
-      let categories = Array.from(typeMap.get(newType).keys());
+      let categories = Array.from(this.categoriesMap.get(newType).keys());
       log.info('Available categories:', categories);
       document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_LIST).innerHTML = this.createOptionList(categories);
     })
@@ -195,23 +166,21 @@ class ProcessorRenderer {
       let newCategory = document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value;
       log.info('New category value:', newCategory);
 
-      let currentSource = document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value;
       let currentType = document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value;
 
       // this should always be false but added here for user experience in case something is wrong
-      if (!this.categoriesMap.has(currentSource) || !this.categoriesMap.get(currentSource).has(currentType)) {
-        log.error("Issue with categories map. Cannot find source and type:", currentSource, currentType);
+      if (!this.categoriesMap.has(currentType)) {
+        log.error("Issue with categories map. Cannot find type:", currentType);
         return;
       }
 
-      let categoryMap = this.categoriesMap.get(currentSource).get(currentType);
+      let categoryMap = this.categoriesMap.get(currentType);
       if (!newCategory || !categoryMap.has(newCategory)) {
         document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = null;
         return;
       }
 
-      let subCategories = [];
-      categoryMap.get(newCategory).forEach(item => subCategories.push(item));
+      let subCategories = Array.from(categoryMap.get(newCategory).values());
 
       log.info('Available sub categories:', subCategories);
       document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_LIST).innerHTML = this.createOptionList(subCategories);
@@ -284,7 +253,7 @@ class ProcessorRenderer {
     document.getElementById(viewElements.DATA_STATEMENT_BALANCE).innerHTML = statement.balance;
 
     document.getElementById(viewElements.DATA_STATEMENT_SOURCE_INPUT).value = statement.source;
-    document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value = statement.source;
+    document.getElementById(viewElements.DATA_STATEMENT_TYPE_INPUT).value = statement.type;
     document.getElementById(viewElements.DATA_STATEMENT_CATEGORY_INPUT).value = statement.mainCategory;
     document.getElementById(viewElements.DATA_STATEMENT_SUB_CATEGORY_INPUT).value = statement.subCategory;
   }

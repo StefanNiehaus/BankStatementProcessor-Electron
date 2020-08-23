@@ -310,7 +310,6 @@ class ProcessorMain {
     async sendCategoriesMap(event) {
         let categoryEntries = await this.bankStatementDAO.getIdentifiers();
 
-        let source = categoryEntries[0]['source'];
         let type = categoryEntries[0]['type'];
         let category = categoryEntries[0]['mainCategory'];
         let subCategory = categoryEntries[0]['subCategory'];
@@ -321,50 +320,36 @@ class ProcessorMain {
         mainCategoryMap.set(category, subCategorySet);
         let typeCategoryMap = new Map();
         typeCategoryMap.set(type, mainCategoryMap);
-        let sourceCategoryMap = new Map();
-        sourceCategoryMap.set(source, typeCategoryMap);
+
+        log.info(typeCategoryMap);
+
 
         for (let row = 1; row < categoryEntries.length; row++) {
-            let source = categoryEntries[row]['source'];
             let type = categoryEntries[row]['type'];
             let category = categoryEntries[row]['mainCategory'];
             let subCategory = categoryEntries[row]['subCategory'];
 
-            if (sourceCategoryMap.has(source)) {
-                let typeMap = sourceCategoryMap.get(source);
-                if (typeMap.has(type)) {
-                    let categoryMap = typeMap.get(type);
-                    if (categoryMap.has(category)) {
-                        let subCategorySet = categoryMap.get(category);
-                        subCategorySet.add(subCategorySet);
-                        categoryMap.set(category, subCategorySet);
-                    } else {
-                        let subCategorySet = new Set();
-                        subCategorySet.add(subCategory);
-                        categoryMap.set(category, subCategorySet);
-                    }
-                    typeMap.set(type, categoryMap);
+            if (typeCategoryMap.has(type)) {
+                let categoryMap = typeCategoryMap.get(type);
+                if (categoryMap.has(category)) {
+                    let subCategorySet = categoryMap.get(category);
+                    subCategorySet.add(subCategory);
+                    categoryMap.set(category, subCategorySet);
                 } else {
                     let subCategorySet = new Set();
                     subCategorySet.add(subCategory);
-                    let categoryMap = new Map();
                     categoryMap.set(category, subCategorySet);
-                    let typeMap = new Map();
-                    typeMap.set(type, categoryMap);
                 }
-                sourceCategoryMap.set(source, typeMap);
+                typeCategoryMap.set(type, categoryMap);
             } else {
                 let subCategorySet = new Set();
                 subCategorySet.add(subCategory);
                 let categoryMap = new Map();
                 categoryMap.set(category, subCategorySet);
-                let typeMap = new Map();
-                typeMap.set(type, categoryMap);
-                sourceCategoryMap.set(source, typeMap);
+                typeCategoryMap.set(type, categoryMap);
             }
         }
-        log.info(sourceCategoryMap);
-        event.returnValue = sourceCategoryMap;
+        event.returnValue = typeCategoryMap;
     }
 }
 

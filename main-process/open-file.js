@@ -1,8 +1,6 @@
-const settings = require('electron-settings');
 const {ipcMain, dialog} = require('electron');
 
 const channels = require('../constants/channels');
-const settingKeys = require('../constants/settings');
 
 const {getDao} = require("./dao/bank-statement-dao");
 const {constructIdentifierDocument, constructDocument, formatStatement} = require('./dto/translation-utils');
@@ -45,24 +43,23 @@ class OpenFileMain {
   }
 
   listenOnLoadBankStatementChannel() {
-    ipcMain.on(channels.REQUEST_LOAD_STATEMENT, (event, selectedFile) => {
-      log.info(`Loading bank statement for processing: ${selectedFile}`);
-      if (!selectedFile) {
+    ipcMain.on(channels.REQUEST_LOAD_STATEMENT, (event, loadConfig) => {
+      log.info(`Loading bank statement for processing: ${loadConfig.filePath}`);
+      if (!loadConfig.filePath) {
         log.info("No bank statement file selected.")
       }
-      // this.bankStatementDAO.removeBankStatementDocuments()
-      readCSV(selectedFile, (data) => this.processBankStatement(data));
+      readCSV(loadConfig.filePath, (data) => this.processBankStatement(data, loadConfig));
     });
   }
 
   listenOnLoadIdentifiersChannel() {
-    ipcMain.on(channels.REQUEST_LOAD_IDENTIFIERS, (event, selectedFile, loadConfig) => {
-      log.info(`Loading bank statement for processing: ${selectedFile}`);
-      if (!selectedFile) {
+    ipcMain.on(channels.REQUEST_LOAD_IDENTIFIERS, (event, loadConfig) => {
+      let filePath = loadConfig.filePath;
+      log.info(`Loading identifiers file for processing: ${filePath}`);
+      if (!filePath) {
         log.info("No identifiers file selected.")
       }
-      // this.bankStatementDAO.removeCategoryDocuments().then(
-      readCSV(selectedFile, (data) => this.processIdentifiersFile(data, loadConfig));
+      readCSV(filePath, (data) => this.processIdentifiersFile(data, loadConfig));
     });
   }
 
@@ -82,13 +79,13 @@ class OpenFileMain {
     });
   }
 
-  async processBankStatement(data) {
+  async processBankStatement(data, loadConfig) {
     log.info("Processing bank statement file");
-    let start = settings.get(settingKeys.ROW_START);
+    let start = loadConfig.startRowIndex;
     let documents = [];
     for (let i = start; i < data.length; i++) {
-      let statement = formatStatement(data[i]);
-      let document = constructDocument(statement);
+      let statement = formatStatement(data[i], loadConfig);
+      let document = constructDocument(statement, loadConfig);
       documents.push(document);
     }
     return await this.bankStatementDAO.bulkInsertStatement(documents);

@@ -10,6 +10,7 @@ const TOGGLE_OPEN_FILE = 'open-file-toggle';
 const BUTTON_LOAD_STATEMENT_FILE = 'select-file';
 const BUTTON_LOAD_STATEMENT_ENTRY = 'load-statement-entry';
 const BUTTON_LOAD_IDENTIFIERS = 'button-load-identifier-file';
+const BUTTON_CONFIRM_CONFIGURATION = 'confirm-input-configuration';
 const BUTTON_START_AUTO_CATEGORIZATION = 'button-start-automatic-categorization';
 const BUTTON_CONFIRM_ENTRY_CLASSIFICATION = 'button-confirm-statement-entry-classification';
 const BUTTON_CONFIRM_ALL_CLASSIFICATIONS = 'button-confirm-categorizations';
@@ -57,6 +58,7 @@ module.exports = {
     BUTTON_LOAD_STATEMENT_FILE,
     BUTTON_LOAD_STATEMENT_ENTRY,
     BUTTON_LOAD_IDENTIFIERS,
+    BUTTON_CONFIRM_CONFIGURATION,
     BUTTON_START_AUTO_CATEGORIZATION,
     BUTTON_CONFIRM_ENTRY_CLASSIFICATION,
     BUTTON_CONFIRM_ALL_CLASSIFICATIONS,
